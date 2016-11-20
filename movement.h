@@ -1,0 +1,13 @@
+void stop_running(uint8_t *sn);
+void tacho_settings(uint8_t *sn, int speed, int ramp_up, int ramp_down, INX_T FLAGS);
+void run_forever_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down);
+void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time, int no_obstacle);
+void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down);
+void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn);
+void run_forever_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down);
+void run_timed_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar ,int speed ,int ramp_up, int ramp_down, int time);
+void run_forever(uint8_t *sn, int speed);
+void run_timed(uint8_t *sn, int speed, int time);
+void run_forever_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed);
+void run_timed_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int time);
+void run_to_abs_pos(uint8_t *sn, int speed);

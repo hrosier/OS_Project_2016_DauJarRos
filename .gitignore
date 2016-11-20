@@ -1,0 +1,6 @@
+*
+!*.*
+!MakeFile
+*.o
+.DS_Store
+

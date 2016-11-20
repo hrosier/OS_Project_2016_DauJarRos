@@ -1,0 +1,2 @@
+Place these files in the home directory of the robot then compile them using the Makefile
+

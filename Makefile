@@ -1,26 +1,25 @@
+#COMPILE := "gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c"
+#SRCS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c")
+SRCS := grab.c mainT.c movement.c sonar.c testSonar.c tester.c turn.c
+#OBJS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c" | sed "s/.c/.o/g") 
+OBJS = $(SRCS:.c=.o)
+#OBJS := grab.o grabT.o mainT.o movement.o .o tester.o turn.o
+#DESTS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c" | tr -d ".c" )
+DESTS := grab mainT movement sonar testSonar tester turn 
 
+all: $(OBJS) mainT testSonar
 
-all:
-	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c tester.c -o tester.o
-	gcc tester.o -Wall -lm -lev3dev-c -o tester
+%.o: %.c %.h
+	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c $< -o $@
 
-runT:
-	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c runTest.c -o runTest.o
-	gcc runTest.o grab.o -Wall -lm -lev3dev-c -o runTest
+%.h: %.c
+	cat $^ | grep "void" | sed -e "s/{/;/g" > $@
 
-grabT:
-	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c grabT.c -o grabT.o
-	gcc grabT.o -Wall -lm -lev3dev-c -o grabTest
+mainT : mainT.o grab.o turn.o movement.o
+	gcc $^ -Wall -lm -lev3dev-c -o $@
 
-grab:
-	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c grab.c -o grab.o
+testSonar : testSonar.o sonar.o 
+	gcc $^ -Wall -lm -lev3dev-c -o $@
 
-movement:
-	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c movement.c -o movement.o
-
-test:
-	gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c mainT.c -o mainT.o
-
-linker:
-	gcc *.o -Wall -lm -lev3dev-c -o run
-
+clean: 
+	rm *.o

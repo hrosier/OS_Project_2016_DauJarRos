@@ -1,19 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "ev3.h"
-#include "ev3_port.h"
-#include "ev3_tacho.h"
-#include "ev3_sensor.h"
+#include "basic_include.h"
 #include "movement.h"
-// WIN32 /////////////////////////////////////////
-#ifdef __WIN32__
-#include <windows.h>
-// UNIX //////////////////////////////////////////
-#else
-#include <unistd.h>
-#define Sleep( msec ) usleep(( msec ) * 1000 )
-//////////////////////////////////////////////////
-#endif
+
+#define RAMP_UP 1000
+#define RAMP_DOWN 1000
 
 void stop_running(uint8_t *sn){
     multi_set_tacho_command_inx( sn , TACHO_STOP);
@@ -38,12 +27,12 @@ void run_forever_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down){
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_FOREVER);
 }
 
-void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time, int no_obstacle){
+void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time, int search_obstacle){
   FLAGS_T state;
   multi_set_tacho_time_sp( sn , time);
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TIMED);
   
-  if (no_obstacle){
+  if (!search_obstacle){
   // Wait until the robot finishes running
   do {
     get_tacho_state_flags( sn[0], &state );
@@ -51,20 +40,38 @@ void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time
   }
 }
 
-void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down){
-  FLAGS_T state;
-  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TIMED);
-  //To be more accurate on the absolute position 
-  do {
-    get_tacho_state_flags( sn[0], &state );
-  } while ( state );
-  
-  for ( int i = 0; i < 2; i++ ) {
-    multi_set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
-    Sleep( 500 );
-  }       
+void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int search_obstacle){
+  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_ABS_POS);
+  if(!search_obstacle){
+    FLAGS_T state;
+    //To be more accurate on the absolute position 
+    do {
+      get_tacho_state_flags( sn[0], &state );
+    } while ( state );
+
+    //  for ( int i = 0; i < 2; i++ ) {
+    //    multi_set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
+    //    Sleep( 500 );
+    //}       
+  }
 }
 
+void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ramp_down, int search_obstacle){
+  multi_set_tacho_position_sp(sn, position);
+  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_REL_POS);
+  if(!search_obstacle){
+    FLAGS_T state;
+    //To be more accurate on the absolute position 
+    do {
+      get_tacho_state_flags( sn[0], &state );
+    } while ( state );
+
+    //for ( int i = 0; i < 2; i++ ) {
+    //  multi_set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
+    //  Sleep( 500 );
+    //}   
+  }    
+}
 void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn){
   float value=0;
   // TODO: understand what these lines means 
@@ -90,21 +97,25 @@ void run_timed_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar ,int speed ,in
 }
 
 void run_forever(uint8_t *sn, int speed){
-  run_forever_ramp(sn, speed, 1000, 1000);
+  run_forever_ramp(sn, speed, RAMP_UP, RAMP_DOWN);
 }
 
 void run_timed(uint8_t *sn, int speed, int time){
-  run_timed_ramp(sn, speed, 1000, 1000, time, 1);
+  run_timed_ramp(sn, speed, RAMP_UP, RAMP_DOWN, time, 1);
 }
 
 void run_forever_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed){
-  run_forever_unless_obstacle_ramp(sn, sn_sonar, speed, 1000, 1000);
+  run_forever_unless_obstacle_ramp(sn, sn_sonar, speed, RAMP_UP, RAMP_DOWN);
 }
 
 void run_timed_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int time){
-  run_timed_unless_obstacle_ramp(sn, sn_sonar, speed, 1000, 1000, time);
+  run_timed_unless_obstacle_ramp(sn, sn_sonar, speed, RAMP_UP, RAMP_DOWN, time);
 }
 
-void run_to_abs_pos(uint8_t *sn, int speed){
-  run_to_abs_pos_ramp(sn, speed, 1000, 1000);
+void run_to_abs_pos(uint8_t *sn, int speed, int search_obstacle){
+  run_to_abs_pos_ramp(sn, speed, RAMP_UP, RAMP_DOWN, search_obstacle);
+}
+
+void run_to_rel_pos(uint8_t *sn, int speed, int position, int search_obstacle){
+  run_to_rel_pos_ramp(sn, speed, position, RAMP_UP, RAMP_DOWN, search_obstacle);
 }

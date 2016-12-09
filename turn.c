@@ -4,7 +4,7 @@
 
 #define RAMP_UP 1500
 #define RAMP_DOWN 1500
-#define RIGHT_ANGLE 1050
+#define RIGHT_ANGLE 1140
 
 
 void mono_tacho_settings(uint8_t sn, int speed, int ramp_up, int ramp_down, INX_T FLAGS){
@@ -92,7 +92,7 @@ void bi_turn_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ram
 }  
 
 void bi_turn_angle(uint8_t *sn, int speed, int angle, char search_obstacle){
-  bi_turn_pos_ramp(sn,speed,angle*RIGHT_ANGLE/90,RAMP_UP,RAMP_DOWN,search_obstacle);
+  bi_turn_pos_ramp(sn,speed,angle*RIGHT_ANGLE/360,RAMP_UP,RAMP_DOWN,search_obstacle);
 }
 
 void u_turn_right_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle){

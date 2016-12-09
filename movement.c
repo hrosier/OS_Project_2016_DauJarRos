@@ -79,10 +79,11 @@ void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn){
     value = 0;
   }
   //While no obstacle run tacho 
-  while (value>200 || value == 0){
+  while (value>100 || value == 0){
     get_sensor_value0(sn_sonar, &value);
   }
   multi_set_tacho_command_inx( sn, TACHO_STOP );
+  printf("Il y a un obstacle \n");
   Sleep( 100 );
 }
 
@@ -92,7 +93,7 @@ void run_forever_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, 
 }
 
 void run_timed_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar ,int speed ,int ramp_up, int ramp_down, int time){
-  run_timed_ramp(sn, speed, ramp_up, ramp_down, time, 0);
+  run_timed_ramp(sn, speed, ramp_up, ramp_down, time, 1);
   check_for_obstacle(sn_sonar, sn);
 }
 
@@ -118,4 +119,13 @@ void run_to_abs_pos(uint8_t *sn, int speed, int search_obstacle){
 
 void run_to_rel_pos(uint8_t *sn, int speed, int position, int search_obstacle){
   run_to_rel_pos_ramp(sn, speed, position, RAMP_UP, RAMP_DOWN, search_obstacle);
+}
+
+void run_distance(uint8_t *sn, int speed, int distance, int search_obstacle){
+  run_to_rel_pos_ramp(sn, speed, distance*1000/480, RAMP_UP, RAMP_DOWN, search_obstacle);
+}
+
+void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance){
+  run_to_rel_pos_ramp(sn, speed, distance*1000/480, RAMP_UP, RAMP_DOWN, 1);
+  check_for_obstacle(sn_sonar, sn);
 }

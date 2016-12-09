@@ -13,3 +13,5 @@ void run_forever_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed);
 void run_timed_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int time);
 void run_to_abs_pos(uint8_t *sn, int speed, int search_obstacle);
 void run_to_rel_pos(uint8_t *sn, int speed, int position, int search_obstacle);
+void run_distance(uint8_t *sn, int speed, int distance, int search_obstacle);
+void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance);

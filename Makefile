@@ -6,6 +6,7 @@ OBJS = $(SRCS:.c=.o)
 #OBJS := grab.o grabT.o mainT.o movement.o .o tester.o turn.o
 #DESTS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c" | tr -d ".c" )
 DESTS := grab mainT movement sonar testSonar tester turn 
+IMPS := sonar.o movement.o grab.o turn.o
 
 all: $(OBJS) mainT testSonar
 
@@ -15,10 +16,16 @@ all: $(OBJS) mainT testSonar
 %.h: %.c
 	cat $^ | grep "void" | sed -e "s/{/;/g" > $@
 
-mainT : mainT.o grab.o turn.o movement.o
+mainT : mainT.o $(IMPS) 
 	gcc $^ -Wall -lm -lev3dev-c -o $@
 
 testSonar : testSonar.o sonar.o 
+	gcc $^ -Wall -lm -lev3dev-c -o $@
+
+movementTest: movementTest.o $(IMPS) 
+	gcc $^ -Wall -lm -lev3dev-c -o $@
+
+turnTest: turnTest.o $(IMPS) 
 	gcc $^ -Wall -lm -lev3dev-c -o $@
 
 clean: 

@@ -65,22 +65,24 @@ void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int 
     do {
       get_tacho_state_flags( sn[0], &state );
     } while ( state );
-
     //for ( int i = 0; i < 2; i++ ) {
     //  multi_set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
     //  Sleep( 500 );
     //}   
   }    
 }
+
 void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn){
   float value=0;
-  // TODO: understand what these lines means 
+  FLAGS_T state;
+  get_tacho_state_flags(sn[0],&state);
   if ( !get_sensor_value0(sn_sonar, &value )) {
     value = 0;
   }
   //While no obstacle run tacho 
-  while (value>100 || value == 0){
+  while ((value>100 || value == 0 ) && state){
     get_sensor_value0(sn_sonar, &value);
+    get_tacho_state_flags(sn[0],&state);
   }
   multi_set_tacho_command_inx( sn, TACHO_STOP );
   printf("Il y a un obstacle \n");

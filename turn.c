@@ -96,11 +96,11 @@ void bi_turn_angle(uint8_t *sn, int speed, int angle, char search_obstacle){
 }
 
 void u_turn_right_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle){
-  bi_turn_pos_ramp(sn, speed, RIGHT_ANGLE, ramp_up, ramp_down,search_obstacle);
+  bi_turn_pos_ramp(sn, speed, RIGHT_ANGLE/2, ramp_up, ramp_down,search_obstacle);
 }
 
 void u_turn_left_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle){
-  bi_turn_pos_ramp(sn, speed, -RIGHT_ANGLE, ramp_up, ramp_down,search_obstacle);
+  bi_turn_pos_ramp(sn, speed, -RIGHT_ANGLE/2, ramp_up, ramp_down,search_obstacle);
 }
 
 void bi_turn_pos(uint8_t *sn, int speed, int position, char search_obstacle){

@@ -26,15 +26,9 @@ void printColor(uint8_t sn_color){
 
 void main(){
   uint8_t sn_color;
-  ev3_sensor_init();
-  if ( ev3_search_sensor( LEGO_EV3_COLOR, &sn_color, 0 )) {
-    printf( "COLOR sensor is found, reading COLOR...\n" );
-    for ( ; ; ){
-      //printRGB(sn_color);
-      printColor(sn_color);
-    }
-  }
-  else {
-    printf("Sensor not found\n");
+  init_color(sn_color);
+  for ( ; ; ){
+    //printRGB(sn_color);
+    printColor(sn_color);
   }
 }

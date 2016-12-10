@@ -12,7 +12,7 @@ int main( void ){
   char s[ 256 ];
   uint32_t n, ii;
 
-  init(sn1, sn2, sn3, sn4, sn_sonar, sn_color, sn, &max_speed, &max_speed_door, &max_speed_cata);
+  init_all(sn1, sn2, sn3, sn4, sn_sonar, sn_color, sn, &max_speed, &max_speed_door, &max_speed_cata);
   run_distance_unless_obstacle(sn,sn_sonar,max_speed/4,200);
   printf("ZERsdf");
   u_turn_right(sn,max_speed/4,0);

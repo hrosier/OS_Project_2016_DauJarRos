@@ -2,9 +2,9 @@
 #include "movement.h"
 #include "turn.h"
 
-#define RAMP_UP 1500
-#define RAMP_DOWN 1500
-#define RIGHT_ANGLE 1140
+#define RAMP_UP 2000
+#define RAMP_DOWN 2000
+#define RIGHT_ANGLE 1030
 
 
 void mono_tacho_settings(uint8_t sn, int speed, int ramp_up, int ramp_down, INX_T FLAGS){
@@ -82,7 +82,7 @@ void bi_turn_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ram
   set_tacho_position_sp(sn[0], position);
   set_tacho_position_sp(sn[1], -position);
   multi_set_tacho_command_inx(sn, TACHO_RUN_TO_REL_POS);
-  if (!search_obstacle){
+  if (search_obstacle==0){
     FLAGS_T state;
     //wait until the tacho finishes turning
     do {

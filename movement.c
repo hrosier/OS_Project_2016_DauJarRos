@@ -32,7 +32,7 @@ void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time
   multi_set_tacho_time_sp( sn , time);
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TIMED);
   
-  if (!search_obstacle){
+  if (search_obstacle==0){
   // Wait until the robot finishes running
   do {
     get_tacho_state_flags( sn[0], &state );
@@ -42,7 +42,7 @@ void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time
 
 void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int search_obstacle){
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_ABS_POS);
-  if(!search_obstacle){
+  if(search_obstacle==0){
     FLAGS_T state;
     //To be more accurate on the absolute position 
     do {
@@ -59,7 +59,7 @@ void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int
 void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ramp_down, int search_obstacle){
   multi_set_tacho_position_sp(sn, position);
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_REL_POS);
-  if(!search_obstacle){
+  if(search_obstacle==0){
     FLAGS_T state;
     //To be more accurate on the absolute position 
     do {

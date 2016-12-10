@@ -1,4 +1,5 @@
 #include "basic_include.h"
+#include "catapult.h"
 #include "grab.h"
 #include "movement.h"
 #include "turn.h"
@@ -9,7 +10,7 @@ const char const *color[] = { "?", "BLACK", "BLUE", "GREEN", "YELLOW", "RED", "W
 int main( void )
 {
   int i;
-  uint8_t sn1,sn2,sn3;
+  uint8_t sn1,sn2,sn3,sn4;
   uint8_t sn[2];
   uint8_t sn_sonar;
   char s[ 256 ];
@@ -66,72 +67,60 @@ int main( void )
     int max_speed_door;
     if ( ev3_search_tacho_plugged_in(port+1,0, &sn2, 0 )) { 
       if ( ev3_search_tacho_plugged_in(port+3,0, &sn3, 0 )) { 
-        if (ev3_search_sensor(LEGO_EV3_US, &sn_sonar,0)){
-          sn[0]=sn1;
-          sn[1]=sn2;
-          multi_set_tacho_position_sp(sn, 0);
-          get_tacho_max_speed(sn[0], &max_speed);
-          get_tacho_max_speed(sn3, &max_speed_door);
-          int door_speed=max_speed_door/2;
+        if ( ev3_search_tacho_plugged_in(port+2,0, &sn4, 0 )) { 
+          if (ev3_search_sensor(LEGO_EV3_US, &sn_sonar,0)){
+            sn[0]=sn1;
+            sn[1]=sn2;
+            multi_set_tacho_position_sp(sn, 0);
+            set_tacho_stop_action_inx( sn4, TACHO_HOLD );
+            get_tacho_max_speed(sn[0], &max_speed);
+            get_tacho_max_speed(sn3, &max_speed_door);
+            int door_speed=max_speed_door/2;
 
-          printf("I am opening the door \n");
-          door_up(sn3,door_speed);
-          Sleep(2000);
+            printf("I am opening the door \n");
+            door_up(sn3,door_speed);
+            Sleep(2000);
 
-          //printf("I am running for a certain amount of time \n");
-          //run_timed(sn,max_speed/4,1000);
-          //Sleep(1000);
+            //printf("I am running for a certain amount of time \n");
+            //run_timed(sn,max_speed/4,1000);
+            //Sleep(1000);
 
-          printf("I am closing the door \n");
-          door_down(sn3,door_speed);
-          Sleep(2000);
+            printf("I am closing the door \n");
+            door_down(sn3,door_speed);
+            Sleep(2000);
 
-         // printf("I am running until i found an obstacle\n");
-         // run_forever_unless_obstacle(sn,sn_sonar,max_speed/3);
-         // Sleep(1000);
-         
-          printf("I run foward for x sec \n");
-          run_timed(sn,max_speed/4,1000);
-          Sleep(3000);
+            // printf("I am running until i found an obstacle\n");
+            // run_forever_unless_obstacle(sn,sn_sonar,max_speed/3);
+            // Sleep(1000);
 
-          printf("I scan for the ball\n");
-          scan_angle_distance(sn,sn_sonar,max_speed/4,45,300);
-          Sleep(5000);
+            printf("I run foward for x sec \n");
+            run_distance(sn,max_speed/4,500,0);
+            Sleep(3000);
 
-          printf("I scan for the ball\n");
-          scan_angle_distance(sn,sn_sonar,max_speed/4,-90,300);
-          Sleep(5000);
+            printf(" I gonna do a U turn \n");
+            u_turn_right(sn,max_speed/2,0);
+            Sleep(1000);
 
-          printf("I try to catch it\n");
-          catch_dist(sn,sn3,max_speed/2,3000);
-          Sleep(3000);
-
-          // To keep the door close
-          set_tacho_position_sp(sn3,0);
-          set_tacho_command_inx(sn3, TACHO_RUN_TO_ABS_POS);
-
-          printf(" I gonna do a U turn \n");
-          u_turn_right(sn,max_speed/2,0);
-          Sleep(1000);
-
-          Sleep(1);
-          //go back
-          run_to_abs_pos(sn, max_speed/3,0);
+            Sleep(1);
+            //go back
+            run_to_abs_pos(sn, max_speed/3,0);
+          } else {
+            printf( "Sonar is NOT found\n" );
+          }
         } else {
-          printf( "Sonar is NOT found\n" );
+          printf("moteur catapult not found \n");
         }
       } else {
         printf( "Moteur 3 is NOT found\n" );
       } 
     } else {
       printf( "Moteur 2 is NOT found\n" );
-    } 
-  } 
-  else {
-    printf( "Moteur 1 is NOT found\n" );
+    }
+  } else {
+      printf( "Moteur 1 is NOT found\n" );
+    }
+
+    ev3_uninit();
+    printf( "*** ( EV3 ) Bye! ***\n" );
+
   }
-
-
-  ev3_uninit();
-  printf( "*** ( EV3 ) Bye! ***\n" );
-}

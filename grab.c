@@ -36,14 +36,12 @@ void door_down( uint8_t sn3, int speed) {
   door_down_ramp(sn3,speed,RAMP_UP,RAMP_DOWN);
 }
 
-void catch_dist(uint8_t *sn, uint8_t sn3, int speed, int position){
+void catch_dist(uint8_t *sn, uint8_t sn3, int speed, int distance){
    //Open the door
    door_up(sn3,speed);
    Sleep(1000);
    // Go foward a little
-   // TODO : Farie la convertion
-   run_timed(sn,speed,position);
-   Sleep(position);
+   run_distance(sn,speed,distance,0);
 
    // close the door 
    door_down(sn3,speed);
@@ -59,12 +57,8 @@ void scan_angle_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, in
     while (value > distance || value == 0){
       get_sensor_value0(sn_sonar, &value);
     }
-    //TODO :If on the compas value to know if we enconter the ball ?
     stop_running(sn);
-    //TODO :run foward to see if it is the ball 
-    // We need to convert value to a position used by the tacho
-    run_to_rel_pos(sn,speed,value,1);
-    //TODO : check if it is the ball
+    run_distance(sn,speed,value-100,0);
 }
 
 void door_up_down( uint8_t sn3, int speed ){

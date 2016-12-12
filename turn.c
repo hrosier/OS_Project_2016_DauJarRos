@@ -2,9 +2,10 @@
 #include "movement.h"
 #include "turn.h"
 
-#define RAMP_UP 2000
-#define RAMP_DOWN 2000
-#define RIGHT_ANGLE 1030
+#define RAMP_UP 1000
+#define RAMP_DOWN 1000
+#define TURN_SPEED 525 //half of the max speed
+#define RIGHT_ANGLE 1015
 
 
 void mono_tacho_settings(uint8_t sn, int speed, int ramp_up, int ramp_down, INX_T FLAGS){
@@ -26,16 +27,16 @@ void turn_forever_ramp(uint8_t sn, int speed, int ramp_up, int ramp_down){
   mono_tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_FOREVER);
 }
 
-void turn_timed_ramp(uint8_t sn, int speed, int ramp_up, int ramp_down, int time, int no_obstacle){
+void turn_timed_ramp(uint8_t sn, int speed, int ramp_up, int ramp_down, int time, int search_obstacle){
   FLAGS_T state;
   set_tacho_time_sp( sn , time);
   mono_tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TIMED);
   
-  if (no_obstacle){
+  if (search_obstacle==0){
   // Wait until the robot finishes turnning
   do {
     get_tacho_state_flags( sn, &state );
-  } while ( state );
+  } while(state);
   }
 }
 
@@ -45,7 +46,7 @@ void turn_to_abs_pos_ramp(uint8_t sn, int speed, int ramp_up, int ramp_down){
   //To be more accurate on the absolute position 
   do {
     get_tacho_state_flags( sn, &state );
-  } while ( state );
+  } while(state);
   
   for ( int i = 0; i < 2; i++ ) {
     set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
@@ -60,7 +61,7 @@ void turn_to_rel_pos_ramp(uint8_t sn, int pos,int speed, int ramp_up, int ramp_d
   //wait until the tacho finishes turning
   do {
     get_tacho_state_flags( sn, &state );
-  } while ( state );
+  } while(state);
 }
 
 void mono_check_for_obstacle(uint8_t sn_sonar, uint8_t sn){
@@ -74,7 +75,6 @@ void mono_check_for_obstacle(uint8_t sn_sonar, uint8_t sn){
     get_sensor_value0(sn_sonar, &value);
   }
   set_tacho_command_inx( sn, TACHO_STOP );
-  Sleep( 100 );
 }
 
 void bi_turn_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ramp_down, char search_obstacle){
@@ -87,13 +87,24 @@ void bi_turn_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ram
     //wait until the tacho finishes turning
     do {
       get_tacho_state_flags( sn[0], &state );
-    } while ( state );
+    } while(state);
   }
 }  
 
 void bi_turn_angle(uint8_t *sn, int speed, int angle, char search_obstacle){
   bi_turn_pos_ramp(sn,speed,angle*RIGHT_ANGLE/360,RAMP_UP,RAMP_DOWN,search_obstacle);
 }
+
+void bi_standard_turn_angle(uint8_t *sn, int angle, char search_obstacle){
+  bi_turn_pos_ramp(sn,TURN_SPEED,angle*RIGHT_ANGLE/360,RAMP_UP,RAMP_DOWN,search_obstacle);
+  int time_to_sleep = (int) abs(angle)*1.98+300;
+  Sleep(time_to_sleep);
+}
+
+void bi_turn_angle_ramp(uint8_t *sn, int speed, int angle, int ramp_up, int ramp_down, char search_obstacle){
+  bi_turn_pos_ramp(sn,speed,angle*RIGHT_ANGLE/360,ramp_up,ramp_down,search_obstacle);
+}
+
 
 void u_turn_right_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle){
   bi_turn_pos_ramp(sn, speed, RIGHT_ANGLE/2, ramp_up, ramp_down,search_obstacle);

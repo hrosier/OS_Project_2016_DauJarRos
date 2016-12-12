@@ -4,7 +4,7 @@ void run_forever_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down);
 void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time, int search_obstacle);
 void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int search_obstacle);
 void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ramp_down, int search_obstacle);
-void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn);
+void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn, int distance);
 void run_forever_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down);
 void run_timed_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar ,int speed ,int ramp_up, int ramp_down, int time);
 void run_forever(uint8_t *sn, int speed);
@@ -14,4 +14,5 @@ void run_timed_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int tim
 void run_to_abs_pos(uint8_t *sn, int speed, int search_obstacle);
 void run_to_rel_pos(uint8_t *sn, int speed, int position, int search_obstacle);
 void run_distance(uint8_t *sn, int speed, int distance, int search_obstacle);
+void run_distance_ramp(uint8_t *sn, int speed, int distance, int ramp_up, int ramp_down, int search_obstacle);
 void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance);

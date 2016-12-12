@@ -2,38 +2,40 @@
 #include "grab.h"
 #include "movement.h"
 #include "turn.h"
+#include "init.h"
 
 int main( void )
 {
-  int i, max_speed, max_speed_door, door_speed, speed, position;
+  int i, max_speed, max_speed_door, turn_speed, position;
   uint8_t sn1,sn2,sn3, sn_sonar;
   uint8_t sn[2];
   char s[ 256 ];
   uint32_t n, ii;
 
-  init_wheels(sn1,sn2,sn,&max_speed);
-  init_door(sn3,&max_speed_door);
-  init_sonar(sn_sonar);
-  door_speed = max_speed_door/2;
-  speed = max_speed/2;
+  init();
+  init_wheels(&sn1,&sn2,sn,&max_speed);
+  init_door(&sn3,&max_speed_door);
+  init_sonar(&sn_sonar);
+  turn_speed = max_speed/2;
 
-  printf("vitesse des roues : %d \n",speed);
+  printf("vitesse des roues : %d \n",turn_speed);
 
   get_tacho_position(sn1,&position);
   printf("position du moteur : %d\n",position);
+  printf("begin turning\n");
+  bi_standard_turn_angle(sn, 90, 0);
 
-  bi_turn_angle(sn, speed, 90, 0);
-  Sleep(5000);
+  printf("begin turning\n");
+  bi_standard_turn_angle(sn, -90, 0);
 
-  bi_turn_angle(sn, speed,90, 0);
-  Sleep(5000);
+  printf("begin turning\n");
+  bi_standard_turn_angle(sn, 180, 0);
 
-  bi_turn_angle(sn, speed, 180, 0);
-  Sleep(5000);
+  printf("begin turning\n");
+  bi_standard_turn_angle(sn, -180, 0);
 
-  bi_turn_angle(sn, speed, -360, 0);
-  Sleep(5000);
-
+  printf("begin turning\n");
+  bi_standard_turn_angle(sn, 360, 0);
   //          printf("I scan for the ball\n");
   //          scan_angle_distance(sn,sn_sonar,speed,45,300);
   //          Sleep(5000);

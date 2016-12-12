@@ -1,8 +1,9 @@
 #include "basic_include.h"
 #include "movement.h"
 
-#define RAMP_UP 1000
-#define RAMP_DOWN 1000
+#define RAMP_UP 1800
+#define RAMP_DOWN 1800
+#define DISTANCE_SONAR 300
 
 void stop_running(uint8_t *sn){
     multi_set_tacho_command_inx( sn , TACHO_STOP);
@@ -13,7 +14,7 @@ void tacho_settings(uint8_t *sn, int speed, int ramp_up, int ramp_down, INX_T FL
   // Check if the robot can run at this speed
   get_tacho_max_speed(sn[0], &max_speed);
   if (speed> max_speed ){
-    printf("the robot can run this fast (%d), its max speed is %d  \n", speed, max_speed );
+    printf("the robot can not run this fast (%d), its max speed is %d  \n", speed, max_speed );
     return;
   }
   multi_set_tacho_stop_action_inx( sn, TACHO_COAST );
@@ -72,7 +73,7 @@ void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int 
   }    
 }
 
-void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn){
+void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn, int distance){
   float value=0;
   FLAGS_T state;
   get_tacho_state_flags(sn[0],&state);
@@ -80,23 +81,25 @@ void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn){
     value = 0;
   }
   //While no obstacle run tacho 
-  while ((value>100 || value == 0 ) && state){
+  while ((value>distance  || value == 0 ) && state){
     get_sensor_value0(sn_sonar, &value);
     get_tacho_state_flags(sn[0],&state);
   }
   multi_set_tacho_command_inx( sn, TACHO_STOP );
+  if (value<=distance){
   printf("Il y a un obstacle \n");
+  }
   Sleep( 100 );
 }
 
 void run_forever_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down){
   run_forever_ramp(sn, speed, ramp_up, ramp_down);
-  check_for_obstacle(sn_sonar, sn);
+  check_for_obstacle(sn_sonar, sn, DISTANCE_SONAR);
 }
 
 void run_timed_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar ,int speed ,int ramp_up, int ramp_down, int time){
   run_timed_ramp(sn, speed, ramp_up, ramp_down, time, 1);
-  check_for_obstacle(sn_sonar, sn);
+  check_for_obstacle(sn_sonar, sn, DISTANCE_SONAR);
 }
 
 void run_forever(uint8_t *sn, int speed){
@@ -127,7 +130,11 @@ void run_distance(uint8_t *sn, int speed, int distance, int search_obstacle){
   run_to_rel_pos_ramp(sn, speed, distance*1000/480, RAMP_UP, RAMP_DOWN, search_obstacle);
 }
 
+void run_distance_ramp(uint8_t *sn, int speed, int distance, int ramp_up, int ramp_down, int search_obstacle){
+  run_to_rel_pos_ramp(sn, speed, distance*1000/480, ramp_up, ramp_down, search_obstacle);
+}
+
 void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance){
   run_to_rel_pos_ramp(sn, speed, distance*1000/480, RAMP_UP, RAMP_DOWN, 1);
-  check_for_obstacle(sn_sonar, sn);
+  check_for_obstacle(sn_sonar, sn, DISTANCE_SONAR);
 }

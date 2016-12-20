@@ -120,7 +120,7 @@ int scan_angle_distance(uint8_t *sn, uint8_t sn_sonar, int max_speed, int angle,
 int is_it_the_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_color, int speed, int distance){
   int val, val_moy;
   door_mi_up_standard(sn3);
-  run_distance(sn,speed,distance-10,0);
+  run_distance(sn,speed,distance-5,0);
   if ( !get_sensor_value( 0, sn_color, &val ) || ( val < 0 ) || ( val >= COLOR_COUNT )) {
     val = 0;
   }
@@ -157,21 +157,23 @@ void door_up_down( uint8_t sn3, int speed ){
   door_down(sn3,speed);
 }
 
-void release_ball(uint8_t *sn, uint8_t sn3, int speed){
+void release_ball(uint8_t *sn, uint8_t sn3, int speed, int distance){
+  run_distance(sn,speed/5,40,0);
+  Sleep(2000);
   door_up_standard(sn3);
-  run_distance(sn,speed,400,0);
+  run_distance(sn,speed,distance,0);
   door_down_standard(sn3);
 }
 
 int scan (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color,int max_speed){
-  int val=scan_angle_distance(sn, sn_sonar, max_speed, 410, 100);
-  if (val>100){
-    val=scan_angle_distance(sn, sn_sonar, max_speed, 410, 200);
-  }
+  int val=scan_angle_distance(sn, sn_sonar, max_speed, 410, 200);
   if (val>200){
     val=scan_angle_distance(sn, sn_sonar, max_speed, 410, 300);
   }
-  if (is_it_the_ball(sn,sn3,sn_color,max_speed/4,val)){
+  if (val>300){
+   val=scan_angle_distance(sn, sn_sonar, max_speed, 410, 500);
+  }
+  if (is_it_the_ball(sn,sn3,sn_color,max_speed/5,val)){
     printf("I think the ball is here !! \n ");
     catch_ball_after_check(sn,sn3,max_speed/4);
     return 1;

@@ -8,15 +8,15 @@
 void test3 (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, int max_speed, int val){
   run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,1200);
   bi_standard_turn_angle(sn, -val,0);
-  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,700);
+  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,850);
   bi_standard_turn_angle(sn, val,0);
-  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,700);
+  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,800);
   bi_standard_turn_angle(sn, val,0);
-  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,350);
-  release_ball(sn,sn3,max_speed/4);
-  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,350);
+  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,450);
+  //release_ball(sn,sn3,max_speed/4,300);
+  //run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,150);
   bi_standard_turn_angle(sn, -val,0);
-  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,1700);
+  run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,1950);
 }
 
 int main( int argc, char *argv[] )
@@ -37,8 +37,9 @@ int main( int argc, char *argv[] )
   if (test_number==2){
     run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,800);
     bi_standard_turn_angle(sn, -90,0);
-    run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,600);
-    release_ball(sn,sn3,max_speed/4);
+    run_distance_unless_obstacle(sn,sn_sonar,max_speed/2,450);
+    Sleep(4000);
+    release_ball(sn,sn3,max_speed/4,350);
   }
   if (test_number==31){
     test3(sn,sn3,sn_sonar,max_speed,90);
@@ -52,7 +53,9 @@ int main( int argc, char *argv[] )
   }
   if (test_number==6){
     if (!scan(sn,sn3,sn_sonar,sn_color,max_speed)){
-      scan(sn,sn3,sn_sonar,sn_color,max_speed);
+      if (!scan(sn,sn3,sn_sonar,sn_color,max_speed)){
+        scan(sn,sn3,sn_sonar,sn_color,max_speed);  
+      }
     }
   }
   uninit(&sn3,&sn4);

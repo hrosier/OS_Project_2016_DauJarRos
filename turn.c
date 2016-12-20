@@ -4,7 +4,7 @@
 
 #define RAMP_UP 1000
 #define RAMP_DOWN 1000
-#define TURN_SPEED 525 //half of the max speed
+#define TURN_SPEED 430 //half of the max speed
 #define RIGHT_ANGLE 1015
 
 

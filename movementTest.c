@@ -16,7 +16,7 @@ int main( void )
   pthread_t threadpos;
   extern int pos_x;
   extern int pos_y;
-  extern int direction; //North,East,south,West
+  extern int angle; //North,East,south,West
   extern pthread_mutex_t mutex ;
 
   init();
@@ -37,13 +37,13 @@ int main( void )
   }
   printf("I am running for 500 mm  \n");
   run_distance_ramp(sn, speed, 500, 1000, 1000, 0);
-  Sleep(3000);
+  Sleep(9000);
 
   printf("I am gonna turn left \n");
   bi_turn_angle_ramp(sn, turn_speed, -90,500,500, 0);
   printf("test");
   pthread_mutex_lock(&mutex);
-  direction=3;
+  angle=3;
   pthread_mutex_unlock(&mutex);
 
   printf("I am running for 500 mm  \n");
@@ -53,7 +53,7 @@ int main( void )
   printf("I am gonna turn left \n");
   bi_turn_angle_ramp(sn, turn_speed, -90,1000,1000, 0);
   pthread_mutex_lock(&mutex);
-  direction=2;
+  angle=2;
   pthread_mutex_unlock(&mutex);
 
   printf("I am running for 500 mm  \n");
@@ -63,7 +63,7 @@ int main( void )
   printf("I am gonna turn left \n");
   bi_turn_angle(sn, turn_speed, -90, 0);
   pthread_mutex_lock(&mutex);
-  direction=1;
+  angle=1;
   pthread_mutex_unlock(&mutex);
 
   printf("I am running for 500 mm  \n");
@@ -73,7 +73,7 @@ int main( void )
   printf("I am gonna turn left \n");
   bi_turn_angle(sn, speed, -90, 0);
   pthread_mutex_lock(&mutex);
-  direction=0;
+  angle=0;
   pthread_mutex_unlock(&mutex);
 
   //get_tacho_position(sn1,&position);

@@ -22,16 +22,16 @@ void init(){
 void uninit (uint8_t *sn3, uint8_t *sn4){
   ev3_uninit();
   set_tacho_stop_action_inx( *sn3, TACHO_COAST );
-  set_tacho_stop_action_inx( *sn4, TACHO_COAST );
 }
 
-void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn, int *max_speed, int *max_speed_door, int *max_speed_cata){
+void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn, int *max_speed, int *max_speed_door, int *max_speed_cata){
   init();
   init_wheels(sn1,sn2,sn,max_speed);
   init_door(sn3,max_speed_door);
   init_catapult(sn4,max_speed_cata);
   init_color(sn_color);
   init_sonar(sn_sonar);
+  init_compass(sn_compass);
 }
 
 void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn, int *max_speed){
@@ -93,4 +93,13 @@ void init_color(uint8_t *sn_color){
     else {
       printf("Color sensor not found\n");
     }
+}
+
+void init_compass(uint8_t *sn_compass){
+  if (ev3_search_sensor(HT_NXT_COMPASS, sn_compass,0)){
+      set_sensor_mode(*sn_compass, "COMPASS");
+  }
+  else {
+    printf("Compass sensor not found\n");
+  }
 }

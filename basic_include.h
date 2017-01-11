@@ -6,6 +6,11 @@
 #include "ev3_sensor.h"
 #include <pthread.h>
 #include "common_variables.h"
+#include "init.h"
+#include "grab.h"
+#include "movement.h"
+#include "turn.h"
+#include "position.h"
 // WIN32 /////////////////////////////////////////
 #ifdef __WIN32__
 #include <windows.h>

@@ -8,3 +8,4 @@ void init_door(uint8_t *sn3, int *max_speed_door);
 void init_sonar(uint8_t *sn_sonar );
 void init_color(uint8_t *sn_color);
 void init_compass(uint8_t *sn_compass);
+void init_threads(uint8_t *sn, uint8_t *sn_compass);

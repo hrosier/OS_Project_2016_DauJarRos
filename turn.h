@@ -8,6 +8,7 @@ void bi_turn_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int ram
 void bi_turn_angle(uint8_t *sn, int speed, int angle, char search_obstacle);
 void bi_standard_turn_angle(uint8_t *sn, int angle, char search_obstacle);
 void bi_turn_angle_ramp(uint8_t *sn, int speed, int angle, int ramp_up, int ramp_down, char search_obstacle);
+void bi_turn_angle2(uint8_t *sn, int speed, int angle, char search_obstacle);
 void u_turn_right_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle);
 void u_turn_left_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle);
 void bi_turn_pos(uint8_t *sn, int speed, int position, char search_obstacle);
@@ -25,4 +26,4 @@ void turn_right_foward(uint8_t *sn, int speed);
 void turn_left_foward(uint8_t *sn, int speed);
 void turn_right_backward(uint8_t *sn, int speed);
 void turn_left_backward(uint8_t *sn, int speed);
-void turn_to_angle(uint8_t *sn, int speed, int angle, int search_obstacle);
+void turn_to_angle(uint8_t *sn, int initial_speed, int angle, int search_obstacle);

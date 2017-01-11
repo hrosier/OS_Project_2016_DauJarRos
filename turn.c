@@ -5,8 +5,6 @@
 
 #define RAMP_UP 1500
 #define RAMP_DOWN 1500
-#define TURN_SPEED 430 //half of the max speed
-#define RIGHT_ANGLE 1015
 
 
 void mono_tacho_settings(uint8_t sn, int speed, int ramp_up, int ramp_down, INX_T FLAGS){
@@ -106,6 +104,14 @@ void bi_turn_angle_ramp(uint8_t *sn, int speed, int angle, int ramp_up, int ramp
   bi_turn_pos_ramp(sn,speed,angle*RIGHT_ANGLE/360,ramp_up,ramp_down,search_obstacle);
 }
 
+void bi_turn_angle2(uint8_t *sn, int speed, int angle, char search_obstacle){
+  int tmp_angle = get_robot_abs_angle();
+  if (tmp_angle+angle>360){
+    turn_to_angle(sn,speed,tmp_angle+angle-360,search_obstacle);
+  } else {
+    turn_to_angle(sn,speed,tmp_angle+angle,search_obstacle);
+  }
+}
 
 void u_turn_right_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, char search_obstacle){
   bi_turn_pos_ramp(sn, speed, RIGHT_ANGLE/2, ramp_up, ramp_down,search_obstacle);
@@ -177,35 +183,37 @@ void turn_left_backward(uint8_t *sn, int speed){
   turn_to_rel_pos(sn[1], - RIGHT_ANGLE, speed);
 }
 
-void turn_to_angle(uint8_t *sn, int speed, int angle, int search_obstacle){
-  int diff;
+void turn_to_angle(uint8_t *sn, int initial_speed, int angle, int search_obstacle){
+  int diff, speed;
   float robot_angle_tmp;
-  robot_angle_tmp=get_robot_angle();
+  speed=initial_speed;
+  robot_angle_tmp=get_robot_abs_angle();
   diff=abs(robot_angle_tmp-angle);
-  while (diff>5){
+  while (diff>3){
     if (robot_angle_tmp>angle){
       if (diff<abs(angle+360-robot_angle_tmp)){
-        printf("1: i am gonna turn for : %d \n", -diff);
+        //printf("1: i am gonna turn for : %d \n", -diff);
         bi_turn_angle(sn,speed,-diff,search_obstacle);
       }
       else {
-        printf("2: i am gonna turn for : %d \n", (int)(360-robot_angle_tmp+angle));
+        //printf("2: i am gonna turn for : %d \n", (int)(360-robot_angle_tmp+angle));
         bi_turn_angle(sn,speed,(int)(360-robot_angle_tmp+angle),search_obstacle);
       }
     }
     else {
       if (diff<abs(robot_angle_tmp+360-angle)){
-        printf("3: i am gonna turn for : %d \n", diff);
+        //printf("3: i am gonna turn for : %d \n", diff);
         bi_turn_angle(sn,speed,diff,search_obstacle);
       }
       else {
-        printf("4: i am gonna turn for : %d \n", (int)(-360-robot_angle_tmp+angle));
+        //printf("4: i am gonna turn for : %d \n", (int)(-360-robot_angle_tmp+angle));
         bi_turn_angle(sn,speed,(int)(-robot_angle_tmp-(360-angle)),search_obstacle);
       }
     }
-    Sleep(1000);
-    print_robot_angle();
-    robot_angle_tmp=get_robot_angle();
+    Sleep(500);
+    //print_robot_abs_angle();
+    robot_angle_tmp=get_robot_abs_angle();
     diff=abs(robot_angle_tmp-angle);
+    speed=speed/2;
   }
 }

@@ -5,72 +5,84 @@
 #include "init.h"
 #include "position.h"
 
-#define TIME_SLEEP 2500
+#define TIME_SLEEP 1800
 
-int main( void )
+void turn_compass_test(uint8_t *sn, int speed, int sleep_time, char choice){
+  for (int i=0; i<8; i++){
+    Sleep(sleep_time);
+    //print_robot_abs_angle();
+    print_robot_rel_angle();
+    Sleep(sleep_time);
+    if (choice==1){
+      bi_turn_angle(sn,speed,90,0);
+    }
+    else {
+      bi_turn_angle2(sn,speed,90,0);
+    }
+    Sleep(sleep_time);
+  }
+}
+
+int main( int argc, char * argv[] )
 {
-  int i, max_speed, max_speed_door, turn_speed, position;
+  int max_speed, max_speed_door, turn_speed, position;
   uint8_t sn1,sn2,sn3, sn_sonar, sn_compass;
   uint8_t sn[2];
-  char s[ 256 ];
-  uint32_t n, ii;
-  int angle;
-  pthread_t threadangle;
 
   init();
   init_wheels(&sn1,&sn2,sn,&max_speed);
   init_door(&sn3,&max_speed_door);
   init_sonar(&sn_sonar);
   init_compass(&sn_compass);
-  create_thread_angle(&threadangle,&sn_compass);
- // if(pthread_create(&threadangle, NULL, thread_angle, &sn_compass)==-1){
- //   perror("pthread_create");
- // }
+  create_thread_angle(&sn_compass);
 
   turn_speed = max_speed/8;
-  Sleep(TIME_SLEEP);
-  print_robot_angle();
+  int choice = atoi (argv[1]);
+  turn_compass_test(sn,turn_speed,TIME_SLEEP,choice);
 
  // get_tacho_position(sn1,&position);
  // printf("begin turning 90 \n");
  // bi_standard_turn_angle(sn, 90, 0);
  // Sleep(TIME_SLEEP);
- // print_robot_angle();
+ // print_robot_abs_angle();
  // Sleep(TIME_SLEEP);
 
  // printf("begin turning -90 \n");
  // bi_standard_turn_angle(sn, -90, 0);
  // Sleep(TIME_SLEEP);
- // print_robot_angle();
+ // print_robot_abs_angle();
  // Sleep(TIME_SLEEP);
 
  // printf("begin turning 180\n");
  // bi_standard_turn_angle(sn, 180, 0);
  // Sleep(TIME_SLEEP);
- // print_robot_angle();
+ // print_robot_abs_angle();
 
  // printf("begin turning -180 \n");
  // bi_standard_turn_angle(sn, -180, 0);
  // Sleep(TIME_SLEEP);
- // print_robot_angle();
+ // print_robot_abs_angle();
 
  // printf("begin turning 360\n");
  // bi_standard_turn_angle(sn, 360, 0);
  // Sleep(TIME_SLEEP);
- // print_robot_angle();
+ // print_robot_abs_angle();
 
-  printf("begin turning to the angle 90\n");
-  turn_to_angle(sn,turn_speed,90,0);
-  Sleep(TIME_SLEEP);
-  print_robot_angle();
-  printf("begin turning to the angle 90\n");
-  turn_to_angle(sn,turn_speed,90,0);
-  Sleep(TIME_SLEEP);
-  print_robot_angle();
-  printf("begin turning to the angle 180\n");
-  turn_to_angle(sn,turn_speed,180,0);
-  Sleep(TIME_SLEEP);
-  print_robot_angle();
+//  printf("begin turning to the angle 90\n");
+//  turn_to_angle(sn,turn_speed,90,0);
+//  Sleep(TIME_SLEEP);
+//  print_robot_abs_angle();
+//  print_robot_rel_angle();
+//  printf("begin turning to the angle 90\n");
+//  turn_to_angle(sn,turn_speed,90,0);
+//  Sleep(TIME_SLEEP);
+//  print_robot_abs_angle();
+//  print_robot_rel_angle();
+//  printf("begin turning to the angle 180\n");
+//  turn_to_angle(sn,turn_speed,180,0);
+//  Sleep(TIME_SLEEP);
+//  print_robot_abs_angle();
+//  print_robot_rel_angle();
   //          printf("I scan for the ball\n");
   //          scan_angle_distance(sn,sn_sonar,speed,45,300);
   //          Sleep(5000);

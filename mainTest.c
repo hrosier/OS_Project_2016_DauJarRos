@@ -1,9 +1,5 @@
 #include "basic_include.h"
 #include "catapult.h"
-#include "grab.h"
-#include "movement.h"
-#include "turn.h"
-#include "init.h"
 
 #define LIM_DIST 500
 
@@ -23,11 +19,9 @@ void test3 (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, int max_speed, int val){
 
 int main( int argc, char *argv[] )
 {
-  int i,val,max_speed,max_speed_door,max_speed_catapult,speed,door_speed,catapult_speed,test_number;
+  int max_speed,max_speed_door,max_speed_catapult,speed,door_speed,catapult_speed,test_number;
   uint8_t sn1,sn2,sn3,sn4,sn_sonar,sn_color,sn_compass;
   uint8_t sn[2];
-  char s[ 256 ];
-  uint32_t n, ii;
 
   init_all(&sn1,&sn2,&sn3,&sn4,&sn_sonar,&sn_color,&sn_compass,sn,&max_speed,&max_speed_door,&max_speed_catapult);
   door_speed=max_speed_door/3;

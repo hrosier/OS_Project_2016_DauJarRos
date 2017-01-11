@@ -3,26 +3,34 @@
 #include "position.h"
 #include "turn.h"
 
-int main( void )
+int main( int argc, char * argv[] )
 {
   uint8_t sn_compass;
   int val;
   float value;
-  pthread_t threadangle;
-  extern float robot_angle; //North,East,south,West
-  extern pthread_mutex_t mutex_angle ;
 
   init();
   init_compass(&sn_compass);
-  if(pthread_create(&threadangle, NULL, thread_angle, &sn_compass)==-1){
-    perror("pthread_create");
-  }
+  create_thread_angle(&sn_compass);
   while (1)  {
-    pthread_mutex_lock(&mutex_angle);
-    printf("Robot angle is : %f \n",robot_angle);
-    pthread_mutex_unlock(&mutex_angle);
-    Sleep(1000);
-  } 
+    //printf("Robot angle is : %f \n",robot_angle);
+    if (atoi(argv[1])==1){
+      print_robot_rel_angle();
+      print_robot_abs_angle();
+      Sleep(2000);
+    }
+    if (atoi(argv[1])==2){
+      print_robot_abs_angle();
+      Sleep(2000);
+    }
+    if (atoi(argv[1])==3){
+      if ( !get_sensor_value0(sn_compass, &value)) {
+        value = 0;
+      } 
+      printf("robot angle from north : %f \n ", value);
+      Sleep(2000);
+    }
+  }
   ev3_uninit();
   return ( 0 );
 }

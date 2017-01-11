@@ -5,103 +5,48 @@
 #include "init.h"
 #include "position.h"
 
-int main( void )
-{
-  int i, max_speed, max_speed_door, door_speed, speed, turn_speed,  position;
-  uint8_t sn1,sn2,sn3, sn_sonar;
-  uint8_t sn[2];
-  char s[ 256 ];
-  uint32_t n, ii;
+#define DISTANCE_SQUARE 300
 
-  pthread_t threadpos;
-  extern int pos_x;
-  extern int pos_y;
-  extern int angle; //North,East,south,West
-  extern pthread_mutex_t mutex ;
+void first_course(uint8_t *sn, uint8_t sn_sonar, int speed,int turn_speed, int distance){
+  create_thread_print_coordinates();
+  for (int i=0;i<4;i++){
+    printf("[A] I am running for %d mm  \n", distance);
+    run_distance_unless_obstacle(sn, sn_sonar, speed, distance);
+
+    printf("[A] I am gonna turn left \n");
+    bi_turn_angle_ramp(sn, turn_speed, -90,distance,500, 0);
+    Sleep(1000);
+  }
+}
+
+int main(int argc, char *argv[])
+{
+  if (argc != 2){
+    printf("[X] wrong usage of the function ! Need 1 parameter\n");
+    return 0;
+  }
+
+  int max_speed, max_speed_door, door_speed, speed, turn_speed, course_number;
+  uint8_t sn1,sn2,sn3, sn_sonar, sn_compass;
+  uint8_t sn[2];
 
   init();
   init_wheels(&sn1,&sn2,sn,&max_speed);
-  printf("value of max_speed : %d \n ", max_speed);
   init_door(&sn3,&max_speed_door);
   init_sonar(&sn_sonar);
+  init_compass(&sn_compass);
+  init_threads(sn,&sn_compass);
   door_speed = max_speed_door/2;
-  speed = max_speed*4/5;
-  turn_speed = max_speed/2;  
+  speed = max_speed/3;
+  turn_speed = max_speed/5;
 
-  printf("vitesse des roues : %d \n",turn_speed);
-  //get_tacho_position(sn1,&position);
-  //printf("position du moteur : %d\n",position);
-
-  if(pthread_create(&threadpos, NULL, thread_position,sn)==-1){
-    perror("pthread_create");
+  printf("[I] Value of max_speed : %d \n", max_speed);
+  printf("[I] vitesse des roues : %d \n",turn_speed);
+  
+  course_number = atoi(argv[1]);
+  //printf("[T] test");
+  if (course_number==1){
+    first_course(sn,sn_sonar,speed,turn_speed,DISTANCE_SQUARE);
   }
-  printf("I am running for 500 mm  \n");
-  run_distance_ramp(sn, speed, 500, 1000, 1000, 0);
-  Sleep(9000);
-
-  printf("I am gonna turn left \n");
-  bi_turn_angle_ramp(sn, turn_speed, -90,500,500, 0);
-  printf("test");
-  pthread_mutex_lock(&mutex);
-  angle=3;
-  pthread_mutex_unlock(&mutex);
-
-  printf("I am running for 500 mm  \n");
-  run_distance_ramp(sn, speed, 500, 2000, 1000, 0);
-  Sleep(3000);
-
-  printf("I am gonna turn left \n");
-  bi_turn_angle_ramp(sn, turn_speed, -90,1000,1000, 0);
-  pthread_mutex_lock(&mutex);
-  angle=2;
-  pthread_mutex_unlock(&mutex);
-
-  printf("I am running for 500 mm  \n");
-  run_distance(sn,speed,500,0);
-  Sleep(3000);
-
-  printf("I am gonna turn left \n");
-  bi_turn_angle(sn, turn_speed, -90, 0);
-  pthread_mutex_lock(&mutex);
-  angle=1;
-  pthread_mutex_unlock(&mutex);
-
-  printf("I am running for 500 mm  \n");
-  run_distance(sn,speed,500,0);
-  Sleep(3000);
-
-  printf("I am gonna turn left \n");
-  bi_turn_angle(sn, speed, -90, 0);
-  pthread_mutex_lock(&mutex);
-  angle=0;
-  pthread_mutex_unlock(&mutex);
-
-  //get_tacho_position(sn1,&position);
-  //printf("position du moteur : %d\n",position);
-  //printf("I am running for 1000 mm \n");
-  //run_distance_unless_obstacle(sn,sn_sonar,speed,1000);
-  //Sleep(3000);
-  //get_tacho_position(sn1,&position);
-  //printf("position du moteur : %d\n",position);
-
-  //          printf("I scan for the ball\n");
-  //          scan_angle_distance(sn,sn_sonar,speed,45,300);
-  //          Sleep(3000);
-  //
-  //          printf("I scan for the ball\n");
-  //          scan_angle_distance(sn,sn_sonar,speed,--90,300);
-  //          Sleep(3000);
-  //
-  //          printf("I try to catch it\n");
-  //          catch_dist(sn,sn3,max_speed/2,3000);
-  //          Sleep(3000);
-  //
-  //          // To keep the door close
-  //          set_tacho_position(sn3,0);
-  //          set_tacho_command_inx(sn3, TACHO_RUN_TO_ABS_POS);
-  //
-  //          printf(" I gonna do a U turn \n");
-  //          u_turn_right(sn,max_speed/2,0);
-  //          Sleep(1000);
   ev3_uninit();
 }

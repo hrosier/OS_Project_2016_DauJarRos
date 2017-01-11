@@ -3,10 +3,11 @@
 
 #define RAMP_UP 1800
 #define RAMP_DOWN 1800
-#define DISTANCE_SONAR 300
+#define DISTANCE_SONAR 200
+#define SLEEP_TIME 800
 
 void stop_running(uint8_t *sn){
-    multi_set_tacho_command_inx( sn , TACHO_STOP);
+  multi_set_tacho_command_inx( sn , TACHO_STOP);
 }
 
 void tacho_settings(uint8_t *sn, int speed, int ramp_up, int ramp_down, INX_T FLAGS){
@@ -29,27 +30,21 @@ void run_forever_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down){
 }
 
 void run_timed_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int time, int search_obstacle){
-  FLAGS_T state;
   multi_set_tacho_time_sp( sn , time);
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TIMED);
-  
+
   if (search_obstacle==0){
-  // Wait until the robot finishes running
-  do {
-    get_tacho_state_flags( sn[0], &state );
-  } while ( state );
+    // Wait until the robot finishes running
+    continue_until_stop_running(sn);
   }
 }
 
 void run_to_abs_pos_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down, int search_obstacle){
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_ABS_POS);
   if(search_obstacle==0){
-    FLAGS_T state;
-    //To be more accurate on the absolute position 
-    do {
-      get_tacho_state_flags( sn[0], &state );
-    } while ( state );
+    continue_until_stop_running(sn);
 
+    /* To be more accurate on the absolute position */
     //  for ( int i = 0; i < 2; i++ ) {
     //    multi_set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
     //    Sleep( 500 );
@@ -61,11 +56,7 @@ void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int 
   multi_set_tacho_position_sp(sn, position);
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_REL_POS);
   if(search_obstacle==0){
-    FLAGS_T state;
-    //To be more accurate on the absolute position 
-    do {
-      get_tacho_state_flags( sn[0], &state );
-    } while ( state );
+    continue_until_stop_running(sn);
     //for ( int i = 0; i < 2; i++ ) {
     //  multi_set_tacho_command_inx( sn, TACHO_RUN_TO_ABS_POS );
     //  Sleep( 500 );
@@ -73,33 +64,33 @@ void run_to_rel_pos_ramp(uint8_t *sn, int speed, int position, int ramp_up, int 
   }    
 }
 
-void check_for_obstacle(uint8_t sn_sonar, uint8_t *sn, int distance){
+void check_for_obstacle(uint8_t *sn, uint8_t sn_sonar, int distance){
   float value=0;
   FLAGS_T state;
   get_tacho_state_flags(sn[0],&state);
-  if ( !get_sensor_value0(sn_sonar, &value )) {
-    value = 0;
-  }
-  //While no obstacle run tacho 
-  while ((value>distance  || value == 0 ) && state){
+  do {
+    if ( !get_sensor_value0(sn_sonar, &value )) {
+      value = 0;
+    }
+    //While no obstacle run tacho 
     get_sensor_value0(sn_sonar, &value);
     get_tacho_state_flags(sn[0],&state);
-  }
+  } while ((value>distance  || value == 0 ) && state);
   multi_set_tacho_command_inx( sn, TACHO_STOP );
   if (value<=distance){
-  printf("Il y a un obstacle \n");
+    printf("There is an obstacle at %f mm \n", value);
   }
-  Sleep( 100 );
+  Sleep(SLEEP_TIME);
 }
 
 void run_forever_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down){
   run_forever_ramp(sn, speed, ramp_up, ramp_down);
-  check_for_obstacle(sn_sonar, sn, DISTANCE_SONAR);
+  check_for_obstacle(sn, sn_sonar, DISTANCE_SONAR);
 }
 
 void run_timed_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar ,int speed ,int ramp_up, int ramp_down, int time){
   run_timed_ramp(sn, speed, ramp_up, ramp_down, time, 1);
-  check_for_obstacle(sn_sonar, sn, DISTANCE_SONAR);
+  check_for_obstacle(sn, sn_sonar, DISTANCE_SONAR);
 }
 
 void run_forever(uint8_t *sn, int speed){
@@ -136,5 +127,12 @@ void run_distance_ramp(uint8_t *sn, int speed, int distance, int ramp_up, int ra
 
 void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance){
   run_to_rel_pos_ramp(sn, speed, distance*1000/480, RAMP_UP, RAMP_DOWN, 1);
-  check_for_obstacle(sn_sonar, sn, DISTANCE_SONAR);
+  check_for_obstacle(sn, sn_sonar, DISTANCE_SONAR);
+}
+
+void continue_until_stop_running(uint8_t *sn){
+  FLAGS_T state;
+  do {
+    get_tacho_state_flags( sn[0], &state );
+  } while ( state );
 }

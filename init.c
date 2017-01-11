@@ -4,6 +4,7 @@
 #include "movement.h"
 #include "turn.h"
 #include "init.h"
+#include "position.h"
 
 #define PORT_WHEEL1 65
 #define PORT_WHEEL2 66
@@ -32,6 +33,7 @@ void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *s
   init_color(sn_color);
   init_sonar(sn_sonar);
   init_compass(sn_compass);
+  init_threads(sn,sn_compass);
 }
 
 void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn, int *max_speed){
@@ -103,3 +105,8 @@ void init_compass(uint8_t *sn_compass){
     printf("Compass sensor not found\n");
   }
 }
+
+void init_threads(uint8_t *sn, uint8_t *sn_compass){
+  create_threads(sn,sn_compass);
+}
+ 

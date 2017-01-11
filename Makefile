@@ -1,31 +1,39 @@
 CC = gcc
-CFLAGS = -I ./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread -c -o
-#COMPILE := "gcc -I./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -c"
+CFLAGS = -I ./ev3dev-c/source/ev3 -I ./headers -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread
 #SRCS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c")
-SRCS := catapult.c catapultTest.c colorTest.c grab.c grabTest.c init.c mainTest.c movement.c movementTest.c sonar.c sonarTest.c tester.c turn.c turnTest.c position.c compassTest.c color.c
+SRCS := catapult.c color.c grab.c init.c mainTest.c movement.c position.c sonar.c turn.c
 #OBJS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c" | sed "s/.c/.o/g") 
-OBJS := $(SRCS:.c=.o)
-#OBJSDIR := ./obj/
-TESTS := $(SRCS:Test.c=Test)
-.SECONDARY: $(OBJS)
-IMPS := sonar.o movement.o grab.o turn.o catapult.o init.o position.o color.o
-	#gcc -I ./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread -c $< -o $@
+vpath %.o obj
+vpath %.h headers
+#OBJS := $(SRCS:.c=.o)
+OBJECTS = $(patsubst %.c,obj/%.o,$(SRCS))
+HEADERS = $(patsubst %.c,headers/%.h,$(SRCS))
+.SECONDARY: $(OBJECTS)
 
-all: $(OBJS) $(TESTS) 
+#gcc -I ./ev3dev-c/source/ev3 -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread -c $< -o $@
 
-%.o: %.c %.h
-	gcc $(CFLAGS) $@ $< 
+all: $(HEADERS) $(OBJECTS) mainTest
 
-TMP = ^$
-%.h: %.c
+$(OBJECTS): | obj
+obj :
+	@mkdir -p $@
+
+obj/%.o: %.c %.h
+	$(CC) $(CFLAGS) -c $< -o $@ 
+
+$(HEADERS): | headers
+
+headers:
+	@mkdir -p $@
+
+headers/%.h: %.c
 	cat $^ | grep "^[a-z]" | grep -v ";"| sed -e "s/{/;/g" > $@
 
-movement.o : movement.c movement.h common_variables.h
-turn.o : turn.c turn.h common_variables.h
+obj/movement.o : movement.c movement.h common_variables.h
+obj/turn.o : turn.c turn.h common_variables.h
 
-%Test : $(IMPS) %Test.o
+mainTest : $(OBJECTS) mainTest.o
 	gcc $^ -Wall -lm -lev3dev-c -lpthread -o $@
-
 
 clean: 
 	rm *.o

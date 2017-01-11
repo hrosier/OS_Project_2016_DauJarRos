@@ -1,6 +1,7 @@
 *
 !*.*
 !MakeFile
+!headers*
 *.o
 .DS_Store
 

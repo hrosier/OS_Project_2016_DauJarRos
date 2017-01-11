@@ -25,24 +25,23 @@ void uninit (uint8_t *sn3, uint8_t *sn4){
   set_tacho_stop_action_inx( *sn3, TACHO_COAST );
 }
 
-void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn, int *max_speed, int *max_speed_door, int *max_speed_cata){
+void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn){
   init();
-  init_wheels(sn1,sn2,sn,max_speed);
-  init_door(sn3,max_speed_door);
-  init_catapult(sn4,max_speed_cata);
+  init_wheels(sn1,sn2,sn);
+  init_door(sn3);
+  init_catapult(sn4);
   init_color(sn_color);
   init_sonar(sn_sonar);
   init_compass(sn_compass);
   init_threads(sn,sn_compass);
 }
 
-void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn, int *max_speed){
+void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn){
   if ( ev3_search_tacho_plugged_in(PORT_WHEEL1,0, sn1, 0 )) {
     if ( ev3_search_tacho_plugged_in(PORT_WHEEL2,0, sn2, 0 )) {
       sn[0]=*sn1;
       sn[1]=*sn2;
       multi_set_tacho_position_sp(sn, 0);
-      get_tacho_max_speed(sn[0], max_speed);
       multi_set_tacho_position(sn, 0);
     }
     else {
@@ -54,10 +53,9 @@ void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn, int *max_speed){
   }
 }
 
-void init_door_or_catapult(uint8_t *sn3, int *max_speed,int port){
+void init_door_or_catapult(uint8_t *sn3,int port){
   if ( ev3_search_tacho_plugged_in(port,0, sn3, 0 )) {
     set_tacho_position(*sn3, 0);
-    get_tacho_max_speed(*sn3, max_speed);
     //if (port==PORT_CATAPULT){
     set_tacho_stop_action_inx( *sn3, TACHO_HOLD );
     //}
@@ -72,12 +70,12 @@ void init_door_or_catapult(uint8_t *sn3, int *max_speed,int port){
   }
 }
 
-void init_catapult(uint8_t *sn4, int *max_speed_cata){
-  init_door_or_catapult(sn4,max_speed_cata,PORT_CATAPULT);
+void init_catapult(uint8_t *sn4){
+  init_door_or_catapult(sn4,PORT_CATAPULT);
 }
 
-void init_door(uint8_t *sn3, int *max_speed_door){
-  init_door_or_catapult(sn3,max_speed_door,PORT_DOOR);
+void init_door(uint8_t *sn3){
+  init_door_or_catapult(sn3,PORT_DOOR);
 }
 
 void init_sonar(uint8_t *sn_sonar ){

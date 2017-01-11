@@ -11,5 +11,5 @@ float get_sonar(uint8_t sn_sonar){
 }
 
 void print_sonar(uint8_t sn_sonar){
-  printf("[I] The value of the sonar sensor : %f", get_sonar(sn_sonar));
+  printf("[I] The value of the sonar sensor : %f\n", get_sonar(sn_sonar));
 }

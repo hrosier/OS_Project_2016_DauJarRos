@@ -39,6 +39,8 @@ void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *s
 void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn){
   if ( ev3_search_tacho_plugged_in(PORT_WHEEL1,0, sn1, 0 )) {
     if ( ev3_search_tacho_plugged_in(PORT_WHEEL2,0, sn2, 0 )) {
+      set_tacho_stop_action_inx( *sn1, TACHO_RESET );
+      set_tacho_stop_action_inx( *sn2, TACHO_RESET );
       sn[0]=*sn1;
       sn[1]=*sn2;
       multi_set_tacho_position_sp(sn, 0);
@@ -55,6 +57,7 @@ void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn){
 
 void init_door_or_catapult(uint8_t *sn3,int port){
   if ( ev3_search_tacho_plugged_in(port,0, sn3, 0 )) {
+    set_tacho_stop_action_inx( *sn3, TACHO_RESET);
     set_tacho_position(*sn3, 0);
     //if (port==PORT_CATAPULT){
     set_tacho_stop_action_inx( *sn3, TACHO_HOLD );

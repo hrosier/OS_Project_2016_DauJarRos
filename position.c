@@ -2,7 +2,6 @@
 #include <math.h> 
 #include "position.h"
 
-#define DEG_TO_RAD 3.14159/180.0
 int pos_x=0;
 int pos_y=0;
 float robot_angle; //angle from the north

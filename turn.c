@@ -1,7 +1,5 @@
 #include "basic_include.h"
-#include "movement.h"
-#include "turn.h"
-#include "position.h"
+#include <string.h>
 
 #define RAMP_UP 1500
 #define RAMP_DOWN 1500
@@ -107,9 +105,9 @@ void bi_turn_angle_ramp(uint8_t *sn, int speed, int angle, int ramp_up, int ramp
 void bi_turn_angle2(uint8_t *sn, int speed, int angle, char search_obstacle){
   int tmp_angle = get_robot_abs_angle();
   if (tmp_angle+angle>360){
-    turn_to_angle(sn,speed,tmp_angle+angle-360,search_obstacle);
+    turn_to_angle(sn,speed,tmp_angle+angle-360,"abs",search_obstacle);
   } else {
-    turn_to_angle(sn,speed,tmp_angle+angle,search_obstacle);
+    turn_to_angle(sn,speed,tmp_angle+angle,"abs",search_obstacle);
   }
 }
 
@@ -183,11 +181,16 @@ void turn_left_backward(uint8_t *sn, int speed){
   turn_to_rel_pos(sn[1], - RIGHT_ANGLE, speed);
 }
 
-void turn_to_angle(uint8_t *sn, int initial_speed, int angle, int search_obstacle){
+void turn_to_angle(uint8_t *sn, int initial_speed, int angle, char *rel_or_abs, int search_obstacle){
   int diff, speed;
   float robot_angle_tmp;
   speed=initial_speed;
-  robot_angle_tmp=get_robot_abs_angle();
+    if (strncmp(rel_or_abs,"rel",3)){
+      robot_angle_tmp=get_robot_rel_angle();
+    }
+    else {
+      robot_angle_tmp=get_robot_abs_angle();
+    }
   diff=abs(robot_angle_tmp-angle);
   while (diff>3){
     if (robot_angle_tmp>angle){
@@ -212,7 +215,12 @@ void turn_to_angle(uint8_t *sn, int initial_speed, int angle, int search_obstacl
     }
     Sleep(500);
     //print_robot_abs_angle();
-    robot_angle_tmp=get_robot_abs_angle();
+    if (strncmp(rel_or_abs,"rel",3)){
+      robot_angle_tmp=get_robot_rel_angle();
+    }
+    else {
+      robot_angle_tmp=get_robot_abs_angle();
+    }
     diff=abs(robot_angle_tmp-angle);
     speed=speed/2;
   }

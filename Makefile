@@ -29,7 +29,10 @@ headers:
 headers/%.h: %.c
 	cat $^ | grep "^[a-z]" | grep -v ";"| sed -e "s/{/;/g" > $@
 
-obj/movement.o : movement.c movement.h common_variables.h
+h : $(SRCS)
+	make $(HEADERS)
+
+obj/movement.o : movement.c movement.h turn.c turn.h common_variables.h
 obj/turn.o : turn.c turn.h common_variables.h
 
 mainTest : $(OBJECTS) mainTest.o

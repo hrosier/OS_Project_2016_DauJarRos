@@ -140,6 +140,33 @@ void test_movement(uint8_t *sn, uint8_t sn_sonar, int choice_parameter){
   if (choice_parameter==1){
     first_course(sn,sn_sonar,speed,turn_speed,DISTANCE_SQUARE);
   }
+  if (choice_parameter==3){
+    //run_distance(sn,MAX_SPEED/3,-100,0);
+    run_distance(sn,MAX_SPEED/3,-20,0);
+    Sleep(SLEEP_TIME);
+    run_distance(sn,-MAX_SPEED/3,10,0);
+  }
+  if (choice_parameter==21){
+    go_to_position1(sn,200,200,MAX_SPEED/3,TURN_SPEED,0);
+    Sleep(3000);
+    go_to_position1(sn,0,400,MAX_SPEED/3,TURN_SPEED,0);
+    Sleep(3000);
+    go_to_position1(sn,200,200,MAX_SPEED/3,TURN_SPEED,0);
+    Sleep(3000);
+    go_to_position1(sn,0,0,MAX_SPEED/3,TURN_SPEED,0);
+    turn_to_angle(sn,TURN_SPEED,0,"rel",0);
+  }
+  if (choice_parameter==22){
+    go_to_position2(sn,200,200,MAX_SPEED/3,TURN_SPEED,0);
+    Sleep(3000);
+    go_to_position2(sn,0,400,MAX_SPEED/3,TURN_SPEED,0);
+    Sleep(3000);
+    go_to_position2(sn,200,200,MAX_SPEED/3,TURN_SPEED,0);
+    Sleep(3000);
+    go_to_position2(sn,0,0,MAX_SPEED/3,TURN_SPEED,0);
+    turn_to_angle(sn,TURN_SPEED,0,"rel",0);
+  }
+
 }
 
 void test_sonar(uint8_t sn_sonar, int choice_parameter){
@@ -166,5 +193,19 @@ void test_turn(uint8_t *sn, uint8_t sn_sonar, uint8_t sn_compass, int turn_speed
       }
       Sleep(SLEEP_TIME);
     }
+    }
+    if (choice_parameter==2){
+      turn_to_angle(sn,TURN_SPEED,90,"rel",0);
+      Sleep(SLEEP_TIME);
+      print_robot_rel_angle();
+      turn_to_angle(sn,TURN_SPEED,180,"rel",0);
+      Sleep(SLEEP_TIME);
+      print_robot_rel_angle();
+      turn_to_angle(sn,TURN_SPEED,270,"rel",0);
+      Sleep(SLEEP_TIME);
+      print_robot_rel_angle();
+      turn_to_angle(sn,TURN_SPEED,0,"rel",0);
+      Sleep(SLEEP_TIME);
+      print_robot_rel_angle();
   }
 }

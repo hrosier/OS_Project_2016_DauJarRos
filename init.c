@@ -21,8 +21,8 @@ void init(){
 }
 
 void uninit (uint8_t *sn3, uint8_t *sn4){
-  ev3_uninit();
   set_tacho_stop_action_inx( *sn3, TACHO_COAST );
+  ev3_uninit();
 }
 
 void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn){

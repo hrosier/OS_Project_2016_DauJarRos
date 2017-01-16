@@ -158,15 +158,15 @@ int scan_angle_distance2(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, in
 int is_it_the_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int speed, int distance){
   int val;
   while (distance>200){
-    run_distance(sn,speed*3/4,150,0);
+    run_distance(sn,speed*3/4,140,0);
+    distance-=140;
     bi_turn_angle(sn,speed/2,-40,0);
-    if (scan_angle_distance2(sn,sn_sonar,speed/3,80,distance-140)>distance-150){
+    if (scan_angle_distance(sn,sn_sonar,speed/3,80,distance)>distance){
       bi_turn_angle(sn,speed/2,-40,0);
     }
-    distance-=150;
   }
   door_mi_up_standard(sn3);
-  run_distance(sn,speed,distance-5,0);
+  run_distance(sn,speed,distance-20,0);
   if ( !get_sensor_value( 0, sn_color, &val ) || ( val < 0 ) || ( val >= COLOR_COUNT )) {
     val = 0;
   }

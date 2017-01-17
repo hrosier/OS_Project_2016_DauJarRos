@@ -26,13 +26,8 @@ void turn_forever_ramp(uint8_t sn, int speed, int ramp_up, int ramp_down){
 void turn_timed_ramp(uint8_t sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down, int time, int search_obstacle){
   set_tacho_time_sp( sn , time);
   mono_tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TIMED);
-  if (search_obstacle==0){
-    // Wait until the robot finishes turnning
-    continue_until_stop_running(&sn);
-  }
-  else {
-    check_for_obstacle(&sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
-  }
+  if (search_obstacle==0) continue_until_stop_running(&sn);
+  if (search_obstacle==1) check_for_obstacle(&sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
 }
 
 void turn_to_abs_pos_ramp(uint8_t sn, int speed, int ramp_up, int ramp_down){
@@ -69,6 +64,7 @@ void bi_turn_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int position, in
   // linear regression to find the max_speed
   int angle = (int)( 360*position/RIGHT_ANGLE);
   int max_speed = abs((int)(-0.4*angle*angle+22*angle+30));
+  speed=abs(speed);
   if (speed > max_speed){
     speed=max_speed;
   }
@@ -79,15 +75,8 @@ void bi_turn_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int position, in
   set_tacho_position_sp(sn[1], -position);
   multi_set_tacho_command_inx(sn, TACHO_RUN_TO_REL_POS);
 
-  if (search_obstacle==0){
-    FLAGS_T state;
-    do {
-      get_tacho_state_flags( sn[0], &state );
-    } while ( state );
-  }
-  else {
-    check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
-  }
+  if (search_obstacle==0) continue_until_stop_running(sn);
+  if (search_obstacle==1) check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
 }  
 
 void bi_turn_angle(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, char search_obstacle){

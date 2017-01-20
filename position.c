@@ -4,12 +4,15 @@
 
 int pos_x=0;
 int pos_y=0;
-float robot_angle; //angle from the north
-float relative_robot_angle; //relative angle from the start
+float abs_angle_compass; //angle from the north
+float rel_angle_compass; //relative angle from the start
+float angle_gyro; 
 pthread_t threadpos;
-pthread_t threadangle;
+pthread_t threadcompass;
+pthread_t threadgyro;
 pthread_mutex_t mutex_position = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_angle = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_gyro = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_compass = PTHREAD_MUTEX_INITIALIZER;
 
 void * thread_position(void *input){
   uint8_t *sn=(uint8_t*)input;
@@ -59,45 +62,61 @@ void create_thread_position(uint8_t *sn){
   }
 }
 
-void * thread_angle(void *input){
+
+void * thread_compass (void *input){
   uint8_t *sn_compass=(uint8_t*)input;
-  extern pthread_mutex_t mutex_angle;
-  extern float robot_angle, relative_robot_angle;
-  float initial_robot_angle;
+  extern pthread_mutex_t mutex_compass;
+  extern float abs_angle_compass, rel_angle_compass;
+  float initial_angle_compass;
   //Initialisation 
   for (int i=0; i<3; i++){
-    pthread_mutex_lock(&mutex_angle);
-    if ( !get_sensor_value0(*sn_compass, &robot_angle)) {
-      robot_angle=0;
+    pthread_mutex_lock(&mutex_compass);
+    if ( !get_sensor_value0(*sn_compass, &abs_angle_compass)) {
+      abs_angle_compass=0;
     }
-    pthread_mutex_unlock(&mutex_angle);
+    pthread_mutex_unlock(&mutex_compass);
   }
-  pthread_mutex_lock(&mutex_angle);
-  initial_robot_angle=robot_angle;
-  pthread_mutex_unlock(&mutex_angle);
+  pthread_mutex_lock(&mutex_compass);
+  initial_angle_compass=abs_angle_compass;
+  pthread_mutex_unlock(&mutex_compass);
   while (1){
-    pthread_mutex_lock(&mutex_angle);
-    if ( !get_sensor_value0(*sn_compass, &robot_angle)) {
-      robot_angle = 0;
-      relative_robot_angle=0;
+    pthread_mutex_lock(&mutex_compass);
+    if ( !get_sensor_value0(*sn_compass, &abs_angle_compass)){
+      abs_angle_compass = 0;
     }
-    else{
-      //printf("[D] Thread angle :\
-      prev angle : %f\
-      angle : %f \n\
-      prev rel angle : %f\n", prev_robot_angle,robot_angle, relative_robot_angle);
-      relative_robot_angle=robot_angle-initial_robot_angle;
-      if (relative_robot_angle<0)
-        relative_robot_angle+=360;
-    }
-    pthread_mutex_unlock(&mutex_angle);
+    rel_angle_compass=abs_angle_compass-initial_angle_compass;
+    if (rel_angle_compass<0) rel_angle_compass+=360;
+    pthread_mutex_unlock(&mutex_compass);
     Sleep(250);
   }
 }
 
-void create_thread_angle(uint8_t *sn_compass){
-  extern pthread_t threadangle;
-  if(pthread_create(&threadangle, NULL, thread_angle,sn_compass)==-1){
+void * thread_gyro (void *input){
+  uint8_t *sn_gyro=(uint8_t*)input;
+  extern pthread_mutex_t mutex_gyro;
+  extern float angle_gyro;
+  //Initialisation 
+  angle_gyro=0;
+  while (1){
+    pthread_mutex_lock(&mutex_gyro);
+    if ( !get_sensor_value0(*sn_gyro, &angle_gyro)){
+      angle_gyro = 0;
+    }
+    pthread_mutex_unlock(&mutex_gyro);
+    Sleep(250);
+  }
+}
+
+void create_thread_compass(uint8_t *sn_compass){
+  extern pthread_t threadcompass;
+  if(pthread_create(&threadcompass, NULL, thread_compass,sn_compass)==-1){
+    perror("pthread_create");
+  }
+}
+
+void create_thread_gyro(uint8_t *sn_gyro){
+  extern pthread_t threadgyro;
+  if(pthread_create(&threadgyro, NULL, thread_gyro,sn_gyro)==-1){
     perror("pthread_create");
   }
 }
@@ -117,27 +136,40 @@ void create_thread_print_coordinates(){
 }
 
 float get_robot_angle(int choice){
-  extern pthread_mutex_t mutex_angle;
-  extern float robot_angle;
+  extern pthread_mutex_t mutex_compass,mutex_gyro;
+  extern float rel_angle_compass,angle_gyro;
   float return_value;
-
-  pthread_mutex_lock(&mutex_angle);
-  if (choice){
-    return_value=robot_angle;
+  if (choice==0){ 
+    pthread_mutex_lock(&mutex_compass);
+    return_value=abs_angle_compass;
+    pthread_mutex_unlock(&mutex_compass);
   }
-  else {
-    return_value=relative_robot_angle;
+  if (choice==1) {
+    pthread_mutex_lock(&mutex_compass);
+    pthread_mutex_lock(&mutex_gyro);
+    int diff=angle_diff(rel_angle_compass,angle_gyro);
+    if (rel_angle_compass<angle_gyro) return_value=rel_angle_compass+0.9*diff;
+    else return_value=angle_gyro+0.1*diff;
+    pthread_mutex_unlock(&mutex_compass);
+    pthread_mutex_unlock(&mutex_gyro);
   }
-  pthread_mutex_unlock(&mutex_angle);
+  if (choice==2){
+    pthread_mutex_lock(&mutex_gyro);
+    return_value=angle_gyro;
+    pthread_mutex_unlock(&mutex_gyro);
+  }
+  if (return_value>360) return_value-=360;
   return return_value;
 }
 
 float get_robot_abs_angle(){
+  return get_robot_angle(0);
+}
+float get_robot_rel_angle(){
   return get_robot_angle(1);
 }
-
-float get_robot_rel_angle(){
-  return get_robot_angle(0);
+float get_robot_angle_gyro(){
+  return get_robot_angle(2);
 }
 
 int get_x_position(){
@@ -179,7 +211,8 @@ void print_robot_coordinates(){
     angle: %f \n", get_x_position(), get_y_position(), get_robot_rel_angle());
 }
 
-void create_threads(uint8_t *sn, uint8_t *sn_compass){
+void create_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro){
   create_thread_position(sn);
-  create_thread_angle(sn_compass);
+  create_thread_compass(sn_compass);
+  create_thread_gyro(sn_gyro);
 }

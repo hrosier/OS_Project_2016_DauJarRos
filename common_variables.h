@@ -20,6 +20,19 @@
 //sonar//
 #define SONAR_DISTANCE 500
 
+//Bluetooth//
+#define SERV_ADDR   "dc:53:60:ad:61:90"     /* Whatever the address of the server is */
+#define TEAM_ID     6                       /* Your team ID */
+
+#define MSG_ACK     0
+#define MSG_NEXT    1
+#define MSG_START   2
+#define MSG_STOP    3
+#define MSG_CUSTOM  4
+#define MSG_KICK    5
+#define MSG_POSITION 6
+#define MSG_BALL 	7
+
 //color//
 #ifndef COLOR_COUNT
 #define COLOR_COUNT 8

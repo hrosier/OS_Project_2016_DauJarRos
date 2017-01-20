@@ -172,6 +172,18 @@ void turn_left_backward(uint8_t *sn, int speed){
   turn_to_rel_pos(sn[1], - RIGHT_ANGLE, speed);
 }
 
+int angle_diff(int angle1, int angle2){
+  if (angle1>angle2) {
+    int tmp=angle2;
+    angle2=angle1;
+    angle1=tmp;
+  }
+  int diff1=angle2-angle1;
+  int diff2=360+angle1-angle2;
+  if (diff1>diff2) return diff2;
+  return diff1;
+}
+
 void turn_to_angle(uint8_t *sn, uint8_t sn_sonar, int initial_speed, int angle, char rel, char search_obstacle){
   int diff, speed;
   float robot_angle_tmp;
@@ -182,7 +194,7 @@ void turn_to_angle(uint8_t *sn, uint8_t sn_sonar, int initial_speed, int angle, 
   else {
     robot_angle_tmp=get_robot_abs_angle();
   }
-  diff=abs(robot_angle_tmp-angle);
+  diff=angle_diff(robot_angle_tmp,angle);
   while (diff>3){
     if (robot_angle_tmp>angle){
       if (diff<abs(angle+360-robot_angle_tmp)){
@@ -217,7 +229,7 @@ void turn_to_angle(uint8_t *sn, uint8_t sn_sonar, int initial_speed, int angle, 
     else {
       robot_angle_tmp=get_robot_abs_angle();
     }
-    diff=abs(robot_angle_tmp-angle);
+    diff=angle_diff(robot_angle_tmp,angle);
     if (speed>100){
       speed=speed/2;
     }

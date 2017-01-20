@@ -1,7 +1,8 @@
 CC = gcc
-CFLAGS = -I ./ev3dev-c/source/ev3 -I ./headers -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread
+INCLUDE = -I ./ev3dev-c/source/ev3 -I ./headers 
+CFLAGS = -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread -lm -lbluetooth
 #SRCS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c")
-SRCS := catapult.c color.c grab.c init.c mainTest.c movement.c position.c sonar.c turn.c
+SRCS := catapult.c color.c grab.c init.c mainTest.c movement.c position.c sonar.c turn.c bluetooth.c
 #OBJS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c" | sed "s/.c/.o/g") 
 vpath %.o obj
 vpath %.h headers
@@ -19,7 +20,7 @@ obj :
 	@mkdir -p $@
 
 obj/%.o: %.c %.h
-	$(CC) $(CFLAGS) -c $< -o $@ 
+	$(CC) $(INCLUDE) $(CFLAGS) -c $< -o $@ 
 
 $(HEADERS): | headers
 
@@ -36,7 +37,7 @@ obj/movement.o : movement.c movement.h turn.c turn.h common_variables.h
 obj/turn.o : turn.c turn.h common_variables.h
 
 mainTest : $(OBJECTS) mainTest.o
-	gcc $^ -Wall -lm -lev3dev-c -lpthread -o $@
+	$(CC) $^ $(INCLUDE) $(CFLAGS) -lm -lev3dev-c -lpthread -o $@
 
 clean: 
-	rm *.o
+	rm obj/*.o

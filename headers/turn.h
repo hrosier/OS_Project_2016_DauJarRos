@@ -26,4 +26,5 @@ void turn_right_foward(uint8_t *sn, int speed);
 void turn_left_foward(uint8_t *sn, int speed);
 void turn_right_backward(uint8_t *sn, int speed);
 void turn_left_backward(uint8_t *sn, int speed);
+int angle_diff(int angle1, int angle2);
 void turn_to_angle(uint8_t *sn, uint8_t sn_sonar, int initial_speed, int angle, char rel, char search_obstacle);

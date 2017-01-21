@@ -114,10 +114,13 @@ void run_to_rel_pos(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int 
 }
 
 void run_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int search_obstacle){
-  if (abs(distance)<DISTANCE_LIMIT){
-    printf("[X] error the robot can run this distance, it is too small (%d)\n",distance);
-    return ;
-  }
+  int max_speed=MAX_SPEED;
+  //the robot can't run too fast if the distance is small
+  if (abs(distance)<100) max_speed=-0.026*distance*distance+6.67*abs(distance)+80;
+  if (abs(distance)>=100 && distance<300) max_speed=-0.0071*distance*distance+4.63*abs(distance)+104;
+  if (max_speed>MAX_SPEED) max_speed=MAX_SPEED;
+  if (speed>max_speed) speed=max_speed;
+  printf("[I,movement] I am going to run %dmm at %d (max_speed:%d)\n",distance,speed,max_speed);
   run_to_rel_pos_ramp(sn,sn_sonar, speed, distance*DISTANCE_TO_POSITION, MOVEMENT_RAMP_UP, MOVEMENT_RAMP_DOWN, search_obstacle);
 }
 
@@ -139,25 +142,29 @@ void continue_until_stop_running(uint8_t *sn){
 
 /** the robot go diagonaly to the destination 
  */
-void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, char check_for_obstacle){
-  int prev_pos_x, prev_pos_y, distance, dest_angle;
-  prev_pos_x=get_x_position();
-  prev_pos_y=get_y_position();
-  distance=(int)sqrt(pow((dest_pos_x-prev_pos_x),2)+pow(dest_pos_y-prev_pos_y,2));
-  // Not optimal but I forget a little how arctan works and I don't want to search ...
-  dest_angle=(int)RAD_TO_DEG*atan((float)abs(dest_pos_x-prev_pos_x)/(float)abs(dest_pos_y-prev_pos_y));
-  //printf("[D] Avant corection prev_x : %d, prev_y : %d, dest_x : %d dest_y : %d, distance : %d, angle : %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
-  if (dest_pos_x<prev_pos_x && dest_pos_y<prev_pos_y) dest_angle+=180;
-  if (dest_pos_x>prev_pos_x && dest_pos_y<prev_pos_y) dest_angle+=90;
-  if (dest_pos_x<prev_pos_x && dest_pos_y>prev_pos_y) dest_angle+=270;
+void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, int number_try, char check_for_obstacle){
+  if (number_try>0){
+    int prev_pos_x, prev_pos_y, distance, dest_angle;
+    prev_pos_x=get_x_position();
+    prev_pos_y=get_y_position();
+    distance=(int)sqrt(pow((dest_pos_x-prev_pos_x),2)+pow(dest_pos_y-prev_pos_y,2));
+    // Not optimal but I forget a little how arctan works and I don't want to search ...
+    dest_angle=(int)RAD_TO_DEG*atan((float)abs(dest_pos_x-prev_pos_x)/(float)abs(dest_pos_y-prev_pos_y));
+    //printf("[D] Avant corection prev_x : %d, prev_y : %d, dest_x : %d dest_y : %d, distance : %d, angle : %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
+    if (dest_pos_x<prev_pos_x && dest_pos_y<prev_pos_y) dest_angle+=180;
+    if (dest_pos_x>prev_pos_x && dest_pos_y<prev_pos_y) dest_angle+=90;
+    if (dest_pos_x<prev_pos_x && dest_pos_y>prev_pos_y) dest_angle+=270;
 
-  printf("[D] I am at (%d,%d) and I go to (%d,%d) by running %dmm with an angle of %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
-  //TODO: know if we use turn1 or turn2
-  turn_to_angle(sn,sn_sonar,turn_speed,dest_angle,1,check_for_obstacle);
-  //bi_turn_angle2(sn,turn_speed,angle,check_for_obstacle);
-  run_distance(sn,sn_sonar,speed,distance,check_for_obstacle);
-  correct_position(sn,sn_sonar,speed,dest_pos_x,dest_pos_y,check_for_obstacle);
-  printf("[D] I arrive at position (%d,%d) \n",get_x_position(),get_y_position());
+    printf("[I,goto2] I am at (%d,%d) and I go to (%d,%d) by running %dmm with an angle of %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
+    //TODO: know if we use turn1 or turn2
+    turn_to_angle(sn,sn_sonar,turn_speed,dest_angle,1,check_for_obstacle);
+    //bi_turn_angle2(sn,sn_sonar,turn_speed,dest_angle,check_for_obstacle);
+    run_distance(sn,sn_sonar,speed,distance,check_for_obstacle);
+    //correct_position(sn,sn_sonar,speed,dest_pos_x,dest_pos_y,check_for_obstacle);
+    printf("[I,goto2] I arrive at position (%d,%d) \n",get_x_position(),get_y_position());
+    if (number_try >1 && (abs(get_x_position()-dest_pos_x)>POSITION_PRECISION || abs(get_y_position()-dest_pos_y)>POSITION_PRECISION) )
+      go_to_position1(sn,sn_sonar,dest_pos_x,dest_pos_y,speed/2,turn_speed*3/4,number_try-1,check_for_obstacle);
+  }
 }
 
 void correct_position(uint8_t *sn, uint8_t sn_sonar, int speed,int dest_pos_x,int dest_pos_y, char check_for_obstacle){
@@ -192,7 +199,6 @@ void correct_position(uint8_t *sn, uint8_t sn_sonar, int speed,int dest_pos_x,in
       }
     }
   }
-
   printf("[D] diff_x : %d, diff now : %d\n", diff_x, get_x_position()-dest_pos_x);
   int diff_y = get_y_position()- dest_pos_y;
   distance_y = (int)(abs(cos(tmp_angle))*diff_y);

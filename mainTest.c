@@ -28,7 +28,8 @@ int main( int argc, char *argv[] ){
     choice_parameters[i-2] = atoi(argv[i]);
   }
   if (!strcmp(choice,"stop")){
-    uninit(&sn3,&sn4);
+    set_tacho_stop_action_inx(sn3,TACHO_COAST);
+    //uninit(&sn3,&sn4);
     stop_running(sn);
     error=0;
   }
@@ -119,11 +120,13 @@ void test_compass(uint8_t sn_compass, int *choice_parameters){
 void test_grab(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int *choice_parameters){
   if (choice_parameters[0]==1){
     if (scan(sn,sn3,sn_sonar,sn_color,TURN_SPEED/3,MAX_SPEED/4,SONAR_DISTANCE )== 2){
+      bi_turn_angle2(sn,sn_sonar,MAX_SPEED/4,40,1);
       scan(sn,sn3,sn_sonar,sn_color,TURN_SPEED/4,MAX_SPEED/4,SONAR_DISTANCE);  
     }
   } 
   if (choice_parameters[0]==2){
     if (scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/3,MAX_SPEED/6,SONAR_DISTANCE)== 2){
+      bi_turn_angle2(sn,sn_sonar,MAX_SPEED/4,40,1);
       scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/4,MAX_SPEED/6,SONAR_DISTANCE);
     }
   }
@@ -148,30 +151,35 @@ void test_movement(uint8_t *sn, uint8_t sn_sonar, int *choice_parameters){
     first_course(sn,sn_sonar,speed,turn_speed,DISTANCE_SQUARE);
   }
   if (choice_parameters[0]==3){
-    //run_distance(sn,sn_sonar,MAX_SPEED/3,-100,0);
-    run_distance(sn,sn_sonar,MAX_SPEED/3,-20,0);
-    Sleep(SLEEP_TIME);
-    run_distance(sn,sn_sonar,-MAX_SPEED/3,10,0);
+    speed=choice_parameters[2];
+    while (speed<MAX_SPEED){
+      run_distance(sn,sn_sonar,speed,choice_parameters[1],0);
+      Sleep(SLEEP_TIME);
+      speed+=20;
+    }
   }
   if (choice_parameters[0]==21){
-    go_to_position1(sn,sn_sonar,-800,1600,MAX_SPEED/2,TURN_SPEED,0);
+    go_to_position1(sn,sn_sonar,choice_parameters[1],choice_parameters[2],MAX_SPEED/2,TURN_SPEED,choice_parameters[3],0);
     Sleep(3000);
-    go_to_position1(sn,sn_sonar,0,1600,MAX_SPEED/2,TURN_SPEED,0);
+    go_to_position1(sn,sn_sonar,0,2*choice_parameters[2],MAX_SPEED/2,TURN_SPEED,choice_parameters[3],0);
     Sleep(3000);
-    go_to_position1(sn,sn_sonar,0,3900,MAX_SPEED/2,TURN_SPEED,0);
+    go_to_position1(sn,sn_sonar,choice_parameters[1],choice_parameters[2],MAX_SPEED/2,TURN_SPEED,choice_parameters[3],0);
     Sleep(3000);
-    turn_to_angle(sn,sn_sonar,TURN_SPEED,180,1,0);
+    go_to_position1(sn,sn_sonar,0,0,MAX_SPEED/2,TURN_SPEED,choice_parameters[3],0);
+    Sleep(3000);
+    turn_to_angle(sn,sn_sonar,TURN_SPEED,0,1,0);
   }
   if (choice_parameters[0]==22){
-    go_to_position2(sn,sn_sonar,-800,1600,MAX_SPEED/2,TURN_SPEED,0);
+    go_to_position2(sn,sn_sonar,choice_parameters[1],choice_parameters[2],MAX_SPEED/2,TURN_SPEED,0);
     Sleep(3000);
-    go_to_position2(sn,sn_sonar,0,1600,MAX_SPEED/2,TURN_SPEED,0);
+    go_to_position2(sn,sn_sonar,0,2*choice_parameters[2],MAX_SPEED/2,TURN_SPEED,0);
     Sleep(3000);
-    go_to_position2(sn,sn_sonar,0,3900,MAX_SPEED/2,TURN_SPEED,0);
+    go_to_position2(sn,sn_sonar,choice_parameters[1],choice_parameters[2],MAX_SPEED/2,TURN_SPEED,0);
     Sleep(3000);
-    turn_to_angle(sn,sn_sonar,TURN_SPEED,180,1,0);
+    go_to_position2(sn,sn_sonar,0,0,MAX_SPEED/2,TURN_SPEED,0);
+    Sleep(3000);
+    turn_to_angle(sn,sn_sonar,TURN_SPEED,0,1,0);
   }
-
 }
 
 void test_sonar(uint8_t sn_sonar, int *choice_parameters){
@@ -190,7 +198,7 @@ void test_turn(uint8_t *sn, uint8_t sn_sonar, uint8_t sn_compass, int *choice_pa
       //print_robot_abs_angle();
       print_robot_rel_angle();
       Sleep(SLEEP_TIME);
-      if (choice_parameters[0]==1){
+      if (choice_parameters[1]==1){
         bi_turn_angle(sn,sn_sonar,TURN_SPEED,90,0);
       }
       else {
@@ -222,6 +230,9 @@ void test_turn(uint8_t *sn, uint8_t sn_sonar, uint8_t sn_compass, int *choice_pa
       Sleep(SLEEP_TIME);
       turn_speed+=choice_parameters[3];
     }
+  }
+  if (choice_parameters[0]==4){
+    turn_to_angle(sn,sn_sonar,choice_parameters[2],choice_parameters[1],1,0);
   }
 }
 
@@ -255,7 +266,6 @@ void test_bluetooth(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color
   int s;
   if( init_bluetooth(&s) == 0 ) {
     char string[58];
-
     // Wait for START message 
     read_from_server (s, string, 9);
     if (string[4] == MSG_START) {
@@ -263,7 +273,6 @@ void test_bluetooth(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color
       rank = (unsigned char) string[5];
       side = (unsigned char) string[6];
       next = (unsigned char) string[7];
-
     }
     if (side==0){
       printf("I am on the right side\n");

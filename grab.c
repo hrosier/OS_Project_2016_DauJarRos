@@ -105,10 +105,10 @@ int scan_angle_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, int
   }
   stop_running(sn);
   if (value>distance){
-    printf("There is not obstacle in the range %d \n",distance);
+    printf("[I,scan1] There is not obstacle in the range %d \n",distance);
   }
   else {
-    printf("There is an obstacle in the range %d \n",distance);
+    printf("[I,scan1] There is an obstacle in the range %d \n",distance);
     if(distance<300){
       bi_turn_angle(sn,sn_sonar,speed/6, 20-0.06*distance,1);
     }
@@ -121,11 +121,11 @@ int scan_angle_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, int
 
 int scan_angle_distance2(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, int distance){
   float value,value_min;
+  FLAGS_T state;
   if ( !get_sensor_value0(sn_sonar, &value )) {
     value = 0;
   }
   bi_turn_angle(sn,sn_sonar, speed, angle, 2);
-  FLAGS_T state;
   get_tacho_state_flags(sn[0],&state);
   value_min=3000;
   while ((value > distance || value == 0) && state){
@@ -140,29 +140,35 @@ int scan_angle_distance2(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, in
     value_min=value;
   }
   if (value_min>distance){
-    printf("There is not obstacle in the range %d , but I think the nearest thing is in range %f mm \n",distance,value_min);
+    printf("[I,scan2] There is not obstacle in the range %d , but I think the nearest thing is in range %f mm \n",distance,value_min);
   }
   else {
-    printf("There is an obstacle in the range %d \n",distance);
-    //Decalage pour etre en face de la balle 
-    if(distance<300){
-      bi_turn_angle(sn,sn_sonar,speed/8, 19-0.05*distance,1);
-    }
-    if (distance>400){
-      bi_turn_angle(sn,sn_sonar,speed/8, 10,1);
-    }
+    printf("[I,scan2] There is an obstacle in the range %d \n",distance);
+//    //Decalage pour etre en face de la balle 
+//    if(distance<300){
+//      bi_turn_angle(sn,sn_sonar,speed/8, 19-0.05*distance,1);
+//    }
+//    if (distance>400){
+//      bi_turn_angle(sn,sn_sonar,speed/8, 10,1);
+//    }
   }
   return value_min;
 }
 
 int is_it_the_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int speed, int distance){
   int val;
-  while (distance>200){
-    run_distance(sn,sn_sonar,speed*3/4,140,0);
-    distance-=140;
-    bi_turn_angle(sn,sn_sonar,speed/2,-40,0);
-    if (scan_angle_distance(sn,sn_sonar,speed/3,80,distance)>distance){
-      bi_turn_angle(sn,sn_sonar,speed/2,-40,0);
+  printf("[I,checkBall] I check if it is the ball at %dmm\n",distance);
+  while (distance>300){
+    // the robot run a little
+    run_distance(sn,sn_sonar,speed*3/4,150,0);
+    distance-=150;
+    // Do another scan to be in font of the ball
+    bi_turn_angle(sn,sn_sonar,speed/2,-50,0);
+    if (scan_angle_distance(sn,sn_sonar,speed/3,80,distance+10)>distance){
+      bi_turn_angle(sn,sn_sonar,speed/2,-30,0);
+      run_distance(sn,sn_sonar,speed*3/4,-150,0);
+      distance+=150;
+      bi_turn_angle(sn,sn_sonar,speed/2,-20,0);
     }
   }
   door_mi_up_standard(sn3);
@@ -219,30 +225,34 @@ int scan (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color,int speed
   if (val>limit_distance*2/3){
     val=scan_angle_distance(sn, sn_sonar, speed_scan, 410, limit_distance);
   }
-  return catch_if_ball(sn,sn3,sn_sonar,sn_color,speed_catch,val,limit_distance);
+  if (val<limit_distance) return catch_if_ball(sn,sn3,sn_sonar,sn_color,speed_catch,val,limit_distance);
+  printf("[I,scan1] I didn't find anything\n");
+  return 0;
 }
 
 int scan2 (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color,int speed_scan, int speed_catch, int limit_distance){
-  int val=scan_angle_distance2(sn, sn_sonar, speed_scan, 410, limit_distance/2);
-  if (val < limit_distance){
-    val=scan_angle_distance2(sn, sn_sonar, speed_scan, 410, limit_distance+50);
+  int val=scan_angle_distance2(sn, sn_sonar, speed_scan, 410, limit_distance/3);
+  if (val > limit_distance/3 && val < limit_distance){
+    val=scan_angle_distance2(sn, sn_sonar, speed_scan, 410, val+50);
   }
-  return catch_if_ball(sn,sn3,sn_sonar,sn_color,speed_catch,val,limit_distance);
+  if (val<limit_distance) return catch_if_ball(sn,sn3,sn_sonar,sn_color,speed_catch,val,limit_distance);
+  printf("[I,scan2] I didn't find anything\n");
+  return 0;
 }
 
 int catch_if_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int speed_catch, int distance_to_object, int limit_distance){
   if (distance_to_object<limit_distance){
     if (is_it_the_ball(sn,sn3,sn_sonar,sn_color,speed_catch,distance_to_object)){
-      printf("I think the ball is here !! \n ");
+      printf("[I,catch] I think the ball is here !! \n ");
       catch_ball_after_check(sn,sn_sonar,sn3,speed_catch);
       return 1;
     }
     else {
-      printf("It is not the ball --' \n");
+      printf("[I,catch] It is not the ball --' \n");
       run_back_no_ball(sn,sn_sonar,sn3,speed_catch);
       return 2;
     }
   }
-  printf("I don't see anything %d mm in front of me \n", limit_distance);
+  printf("[I,catch] don't see anything %d mm in front of me \n", limit_distance);
   return 0;
 }

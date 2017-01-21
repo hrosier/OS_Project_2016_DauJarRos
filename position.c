@@ -159,6 +159,7 @@ float get_robot_angle(int choice){
     pthread_mutex_unlock(&mutex_gyro);
   }
   if (return_value>360) return_value-=360;
+  if (return_value<0) return_value+=360;
   return return_value;
 }
 

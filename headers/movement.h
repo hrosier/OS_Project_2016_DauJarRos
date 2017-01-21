@@ -17,6 +17,6 @@ void run_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int se
 void run_distance_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int ramp_up, int ramp_down, int search_obstacle);
 void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance);
 void continue_until_stop_running(uint8_t *sn);
-void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, char check_for_obstacle);
+void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, int number_try, char check_for_obstacle);
 void correct_position(uint8_t *sn, uint8_t sn_sonar, int speed,int dest_pos_x,int dest_pos_y, char check_for_obstacle);
 void go_to_position2(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, char check_for_obstacle);

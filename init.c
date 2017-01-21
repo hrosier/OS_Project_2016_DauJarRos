@@ -93,10 +93,9 @@ void init_sonar(uint8_t *sn_sonar ){
 void init_gyro (uint8_t *sn_gyro ){
   if (ev3_search_sensor(LEGO_EV3_GYRO, sn_gyro,0)){
         set_sensor_mode(*sn_gyro, "GYRO-RATE");
-        Sleep(500);
         set_sensor_mode(*sn_gyro, "GYRO-ANG");
         //The calibration takes time 
-        Sleep(3000);
+        Sleep(500);
   }
   else {
     printf("[X] Gyroscope  is NOT found\n" );

@@ -2,7 +2,7 @@ CC = gcc
 INCLUDE = -I ./ev3dev-c/source/ev3 -I ./headers 
 CFLAGS = -O2 -std=gnu99 -W -Wall -Wno-comment -lpthread -lm -lbluetooth
 #SRCS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c")
-SRCS := catapult.c color.c grab.c init.c mainTest.c movement.c position.c sonar.c turn.c bluetooth.c
+SRCS := catapult.c color.c grab.c init.c mainTest.c movement.c position.c sonar.c turn.c bluetooth.c final.c
 #OBJS := $(shell ls | egrep -o "[a-zA-Z0-9]*\.c" | sed "s/.c/.o/g") 
 vpath %.o obj
 vpath %.h headers

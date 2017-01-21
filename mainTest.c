@@ -1,4 +1,5 @@
 #include "basic_include.h"
+#include "final.h"
 #include "mainTest.h"
 #include "catapult.h"
 #include "color.h"
@@ -14,13 +15,11 @@ int main( int argc, char *argv[] ){
   char choice[20];
   uint8_t sn1,sn2,sn3,sn4,sn_sonar,sn_color,sn_compass,sn_gyro;
   uint8_t sn[2];
-
   if (argc<3){
     printf("[X] Wrong usage of the function ! use it like that : ./mainTest movement 1\n");
     return 0;
   }
   int choice_parameters[argc-2];
-
   init_all(&sn1,&sn2,&sn3,&sn4,&sn_sonar,&sn_color,&sn_compass,&sn_gyro,sn);
   error=1;
   strncpy(choice,argv[1],20);
@@ -71,6 +70,22 @@ int main( int argc, char *argv[] ){
   }
   if (!strcmp(choice,"gyro")){
     test_gyro(sn,sn3,sn_sonar,sn_color,sn_gyro,choice_parameters);
+    error=0;
+  }
+  if (!strcmp(choice,"smallbeg")){
+    small_arena_beginner(sn,sn3,sn_sonar);
+    error=0;
+  }
+  if (!strcmp(choice,"smallfin")){
+    small_arena_finisher(sn,sn3,sn_sonar,sn_color);
+    error=0;
+  }
+  if (!strcmp(choice,"bigbeg")){
+    big_arena_beginner(sn,sn3,sn_sonar,choice_parameters[0]);
+    error=0;
+  }
+  if (!strcmp(choice,"bigfin")){
+    big_arena_finisher(sn,sn3,sn4,sn_sonar,sn_color,choice_parameters[0]);
     error=0;
   }
   if (error) printf("[X] error %s is not a right command :/ \n",choice);
@@ -130,6 +145,9 @@ void test_grab(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int
       scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/4,MAX_SPEED/6,SONAR_DISTANCE);
     }
   }
+  if (choice_parameters[0]==3){
+    release_ball(sn,sn_sonar,sn3,MAX_SPEED/4,choice_parameters[1],choice_parameters[2]);
+  }
 }
 
 void first_course(uint8_t *sn, uint8_t sn_sonar, int speed,int turn_speed, int distance){
@@ -145,13 +163,11 @@ void first_course(uint8_t *sn, uint8_t sn_sonar, int speed,int turn_speed, int d
 }
 
 void test_movement(uint8_t *sn, uint8_t sn_sonar, int *choice_parameters){
-  int speed, turn_speed;
-  printf("[I] Turn speed : %d \n",turn_speed);
   if (choice_parameters[0]==1){
-    first_course(sn,sn_sonar,speed,turn_speed,DISTANCE_SQUARE);
+    first_course(sn,sn_sonar,choice_parameters[1],TURN_SPEED,DISTANCE_SQUARE);
   }
   if (choice_parameters[0]==3){
-    speed=choice_parameters[2];
+    int speed=choice_parameters[2];
     while (speed<MAX_SPEED){
       run_distance(sn,sn_sonar,speed,choice_parameters[1],0);
       Sleep(SLEEP_TIME);
@@ -238,7 +254,7 @@ void test_turn(uint8_t *sn, uint8_t sn_sonar, uint8_t sn_compass, int *choice_pa
 
 void test_movement_grab(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int *choice_parameters){
   if (choice_parameters[0]==1){
-    go_to_position2(sn,sn_sonar,choice_parameters[1],choice_parameters[2],MAX_SPEED/2,TURN_SPEED,1);
+    go_to_position1(sn,sn_sonar,choice_parameters[1],choice_parameters[2],MAX_SPEED/2,TURN_SPEED,choice_parameters[3],1);
     if (scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/3,MAX_SPEED/6,SONAR_DISTANCE)== 2){
       scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/4,MAX_SPEED/6,SONAR_DISTANCE);
     }
@@ -332,7 +348,7 @@ void beginner (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int
   //string[8] = 0x4;    /* y */
   string[9]= 0x00;
   write(s, string, 10);
-  release_ball(sn,sn3,sn_sonar,MAX_SPEED/3,350);
+  release_ball(sn,sn3,sn_sonar,MAX_SPEED/3,350,1);
 
 
   //last position message

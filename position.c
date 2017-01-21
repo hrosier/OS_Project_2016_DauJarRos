@@ -138,7 +138,7 @@ void create_thread_print_coordinates(){
 float get_robot_angle(int choice){
   extern pthread_mutex_t mutex_compass,mutex_gyro;
   extern float rel_angle_compass,angle_gyro;
-  float return_value;
+  float return_value=0;
   if (choice==0){ 
     pthread_mutex_lock(&mutex_compass);
     return_value=abs_angle_compass;

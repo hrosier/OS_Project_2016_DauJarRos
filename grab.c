@@ -209,11 +209,11 @@ void door_up_down( uint8_t sn3, int speed ){
   door_down(sn3,speed);
 }
 
-void release_ball(uint8_t *sn, uint8_t sn_sonar, uint8_t sn3, int speed, int distance){
-  run_distance(sn,sn_sonar,speed/5,40,0);
+void release_ball(uint8_t *sn, uint8_t sn_sonar, uint8_t sn3, int speed, int distance, int front_or_back){
+  run_distance(sn,sn_sonar,speed/5,front_or_back*40,0);
   Sleep(2000);
   door_up_standard(sn3);
-  run_distance(sn,sn_sonar,speed,distance,0);
+  run_distance(sn,sn_sonar,speed,front_or_back*distance,0);
   door_down_standard(sn3);
 }
 

@@ -11,7 +11,7 @@
 #define SLEEP_TIME 1800
 
 int main( int argc, char *argv[] ){
-  int error,i;
+  int error,i,s,dest;
   char choice[20];
   uint8_t sn1,sn2,sn3,sn4,sn_sonar,sn_color,sn_compass,sn_gyro;
   uint8_t sn[2];
@@ -20,9 +20,10 @@ int main( int argc, char *argv[] ){
     return 0;
   }
   int choice_parameters[argc-2];
-  init_all(&sn1,&sn2,&sn3,&sn4,&sn_sonar,&sn_color,&sn_compass,&sn_gyro,sn);
+  init_all(&sn1,&sn2,&sn3,&sn4,&sn_sonar,&sn_color,&sn_compass,&sn_gyro,sn,&s);
   error=1;
   strncpy(choice,argv[1],20);
+  dest=1;
   for(i=2;i<argc;i++){
     choice_parameters[i-2] = atoi(argv[i]);
   }
@@ -65,7 +66,7 @@ int main( int argc, char *argv[] ){
     error=0;
   }
   if (!strcmp(choice,"bluetooth")){
-    test_bluetooth(sn,sn3,sn_sonar,sn_color,choice_parameters);
+    test_bluetooth(sn,sn3,sn_sonar,sn_color,&s,choice_parameters);
     error=0;
   }
   if (!strcmp(choice,"gyro")){
@@ -73,19 +74,55 @@ int main( int argc, char *argv[] ){
     error=0;
   }
   if (!strcmp(choice,"smallbeg")){
-    small_arena_beginner(sn,sn3,sn_sonar);
+    create_thread_print_coordinates();
+    if (choice_parameters[0]==1){
+      set_position(1100,300);
+      set_side_angle(0);
+      while (1){
+        small_arena_beginner(sn,sn3,sn_sonar,sn_color,s,dest);
+      }
+    }
+    if (choice_parameters[0]==2){
+      set_position(1100,300);
+      set_side_angle(0);
+      put_small_beg(sn,sn3,sn_sonar,s,dest);
+    }
+    if (choice_parameters[0]==3){
+      set_position(1100,1900);
+      set_side_angle(180);
+      get_small_beg(sn,sn3,sn_sonar,sn_color,s,dest);
+    }
     error=0;
   }
   if (!strcmp(choice,"smallfin")){
-    small_arena_finisher(sn,sn3,sn_sonar,sn_color);
+    create_thread_print_coordinates();
+    if (choice_parameters[0]==1){
+      set_position(100,1700);
+      set_side_angle(180);
+      while(1){
+        small_arena_finisher(sn,sn3,sn_sonar,sn_color,s,dest);
+      }
+    }
+    if (choice_parameters[0]==2){
+      set_position(100,1700);
+      set_side_angle(180);
+      get_small_fin(sn,sn3,sn_sonar,sn_color,s,dest);
+    }
+    if (choice_parameters[0]==3){
+      set_position(100,300);
+      set_side_angle(0);
+      put_small_fin(sn,sn3,sn_sonar,s,dest);
+    }
     error=0;
   }
   if (!strcmp(choice,"bigbeg")){
-    big_arena_beginner(sn,sn3,sn_sonar,choice_parameters[0]);
+    create_thread_print_coordinates();
+    big_arena_beginner(sn,sn3,sn_sonar,choice_parameters[0],s,dest);
     error=0;
   }
   if (!strcmp(choice,"bigfin")){
-    big_arena_finisher(sn,sn3,sn4,sn_sonar,sn_color,choice_parameters[0]);
+    create_thread_print_coordinates();
+    big_arena_finisher(sn,sn3,sn4,sn_sonar,sn_color,choice_parameters[0],s,dest);
     error=0;
   }
   if (error) printf("[X] error %s is not a right command :/ \n",choice);
@@ -146,7 +183,10 @@ void test_grab(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int
     }
   }
   if (choice_parameters[0]==3){
-    release_ball(sn,sn_sonar,sn3,MAX_SPEED/4,choice_parameters[1],choice_parameters[2]);
+    release_ball(sn,sn_sonar,sn3,MAX_SPEED/4,choice_parameters[1],choice_parameters[2],12,12);
+  }
+  if (choice_parameters[0]==4){
+    get_ball(sn,sn3,sn_sonar,sn_color);
   }
 }
 
@@ -240,7 +280,7 @@ void test_turn(uint8_t *sn, uint8_t sn_sonar, uint8_t sn_compass, int *choice_pa
   if (choice_parameters[0]==3){
     int turn_speed;
     turn_speed=choice_parameters[2];
-    while (turn_speed<= TURN_SPEED){
+    while (turn_speed<= MAX_SPEED){
       printf("[I] turn speed: %d \n",turn_speed);
       bi_turn_pos_ramp(sn,sn_sonar,turn_speed,choice_parameters[1]*RIGHT_ANGLE/360,1500,1500,0);
       Sleep(SLEEP_TIME);
@@ -260,6 +300,7 @@ void test_movement_grab(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_c
     }
   }
 }
+
 void test_gyro(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, uint8_t sn_gyro, int *choice_parameters){
   float value0;
   if (choice_parameters[0]==1){
@@ -272,173 +313,6 @@ void test_gyro(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, uin
       print_robot_rel_angle();
       printf("\n");
       Sleep(2000);
-    }
-  }
-}
-
-void test_bluetooth(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int *choice_parameters){
-  extern uint16_t msgId;
-  extern char rank,length,previous,next,side;
-  int s;
-  if( init_bluetooth(&s) == 0 ) {
-    char string[58];
-    // Wait for START message 
-    read_from_server (s, string, 9);
-    if (string[4] == MSG_START) {
-      printf ("Received start message!\n");
-      rank = (unsigned char) string[5];
-      side = (unsigned char) string[6];
-      next = (unsigned char) string[7];
-    }
-    if (side==0){
-      printf("I am on the right side\n");
-    }
-    else {
-      printf("I am on the left side\n");
-    }
-    if (rank == 0)
-      beginner (sn,sn3,sn_sonar,sn_color,s,side);
-    else
-      finisher (sn,sn3,sn_sonar,sn_color,s,side);
-    close (s);
-    sleep (5);
-
-  } else {
-    fprintf (stderr, "Failed to connect to server...\n");
-    sleep (2);
-    exit (EXIT_FAILURE);
-  }
-
-  close(s);
-}
-
-
-void beginner (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int s, int side) {
-  char string[58];
-  extern uint16_t msgId;
-  extern char rank,length,previous,next;
-  printf ("I'm the beginner...\n");
-
-  /* Send 3 POSITION messages, a BALL message, 1 position message, then a NEXT message */
-  int i;
-  for (i=0; i<3; i++){
-    *((uint16_t *) string) = msgId++;
-    string[2] = TEAM_ID;
-    string[3] = 0xFF;
-    string[4] = MSG_POSITION;
-    string[5] = get_x_position();          /* x */
-    string[6] = 0x00;
-    string[7] = get_y_position();   /* y */
-    string[8]= 0x00;
-    write(s, string, 9);
-    if (side==0) go_to_position2(sn,sn_sonar,get_x_position()+200,get_y_position()+200,MAX_SPEED/3,TURN_SPEED,0);
-    if (side==1) go_to_position2(sn,sn_sonar,get_x_position()-200,get_y_position()-200,MAX_SPEED/3,TURN_SPEED,0);
-
-  }
-
-  //BALL drop message
-  *((uint16_t *) string) = msgId++;
-  string[2] = TEAM_ID;
-  string[3] = next;
-  string[4] = MSG_BALL;
-  string[5] = 0x0;
-  string[6] = get_x_position();          /* x */
-  string[7] = 0x00;
-  string[8] = get_y_position();
-  //string[8] = 0x4;    /* y */
-  string[9]= 0x00;
-  write(s, string, 10);
-  release_ball(sn,sn3,sn_sonar,MAX_SPEED/3,350,1);
-
-
-  //last position message
-  *((uint16_t *) string) = msgId++;
-  string[2] = TEAM_ID;
-  string[3] = 0xFF;
-  string[4] = MSG_POSITION;
-  string[5] = get_x_position();          /* x */
-  string[6] = 0x00;
-  string[7] = get_y_position();   /* y */
-  string[8]= 0x00;
-  write(s, string, 9);
-
-  //Next message
-
-  *((uint16_t *) string) = msgId++;
-  string[2] = TEAM_ID;
-  string[3] = next;
-  string[4] = MSG_NEXT;
-  write(s, string, 5);
-
-  while(1){
-    //Wait for other robot to finish
-  }
-}
-
-void finisher (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int s, int side) {
-  char string[58];
-  extern uint16_t msgId;
-  extern char rank,length,previous,next;
-  char type;
-
-  printf ("I'm the finisher...\n");
-  /* Get message */
-  while (1){
-    read_from_server (s, string, 58);
-    type = string[4];
-
-    switch (type) {
-      case MSG_STOP:
-        return;
-      case MSG_NEXT:
-        //send a position
-        *((uint16_t *) string) = msgId++;
-        string[2] = TEAM_ID;
-        string[3] = 0xFF;
-        string[4] = MSG_POSITION;
-        string[5] = get_x_position();          /* x */
-        string[6]= 0x00;
-        string[7] = get_y_position();     /* y */
-        string[8] = 0x00;
-        write(s, string, 9);
-
-        if (side==0) go_to_position2(sn,sn_sonar,200,200,MAX_SPEED/3,TURN_SPEED,0);
-        if (side==1) go_to_position2(sn,sn_sonar,-200,200,MAX_SPEED/3,TURN_SPEED,0);
-        if (scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/3,MAX_SPEED/6,SONAR_DISTANCE)== 2){
-          scan2(sn,sn3,sn_sonar,sn_color,TURN_SPEED/4,MAX_SPEED/6,SONAR_DISTANCE);
-        }
-        //pick up a ball
-        *((uint16_t *) string) = msgId++;
-        string[2] = TEAM_ID;
-        string[3] = next;
-        string[4] = MSG_BALL;
-        string[5] = 0x1;
-        string[6] = get_x_position();          /* x */
-        string[7] = 0x00;
-        string[8] = get_y_position();    /* y */
-        string[9]= 0x00;
-        write(s, string, 10);       
-
-        if (side==0) go_to_position2(sn,sn_sonar,400,400,MAX_SPEED/3,TURN_SPEED,0);
-        if (side==1) go_to_position2(sn,sn_sonar,400,400,MAX_SPEED/3,TURN_SPEED,0);
-
-        //send a position
-        string[2] = TEAM_ID;
-        string[3] = 0xFF;
-        string[4] = MSG_POSITION;
-        string[5] = get_x_position();          /* x */
-        string[6]= 0x00;
-        string[7] = get_y_position();     /* y */
-        string[8] = 0x00;
-        write(s, string, 9);
-        //Game over
-        return;
-      case MSG_BALL:
-        //I know where the ball is
-        printf("Ball dropped at %02X%02X,%02X%02X \n",string[7], string[6], string[9], string[8]);
-        break;        
-      default:
-        printf ("Ignoring message %d\n", type);
     }
   }
 }

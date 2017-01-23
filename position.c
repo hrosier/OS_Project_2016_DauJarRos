@@ -7,12 +7,15 @@ int pos_y=0;
 float abs_angle_compass; //angle from the north
 float rel_angle_compass; //relative angle from the start
 float angle_gyro; 
+float side_angle=0; //0 if beginner, 180 if finisher 
 pthread_t threadpos;
 pthread_t threadcompass;
 pthread_t threadgyro;
+pthread_t threadsendmessage;
 pthread_mutex_t mutex_position = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_gyro = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_compass = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_angle_side = PTHREAD_MUTEX_INITIALIZER;
 
 void * thread_position(void *input){
   uint8_t *sn=(uint8_t*)input;
@@ -107,6 +110,21 @@ void * thread_gyro (void *input){
   }
 }
 
+void * thread_send_message (void *input){
+    int *s=(int*)input;
+    while (1){
+      send_message(*s,6,0,0);
+      Sleep(2000);
+    }
+}
+
+void create_thread_send_message(int *s){
+  extern pthread_t threadsendmessage;
+  if(pthread_create(&threadsendmessage, NULL, thread_send_message,s)==-1){
+    perror("pthread_create");
+  }
+}
+
 void create_thread_compass(uint8_t *sn_compass){
   extern pthread_t threadcompass;
   if(pthread_create(&threadcompass, NULL, thread_compass,sn_compass)==-1){
@@ -124,7 +142,7 @@ void create_thread_gyro(uint8_t *sn_gyro){
 void * thread_print_coordinates (){
   while(1){
     print_robot_coordinates();
-    Sleep(750);
+    Sleep(2000);
   }
 }
 
@@ -137,7 +155,7 @@ void create_thread_print_coordinates(){
 
 float get_robot_angle(int choice){
   extern pthread_mutex_t mutex_compass,mutex_gyro;
-  extern float rel_angle_compass,angle_gyro;
+  extern float rel_angle_compass,angle_gyro, side_angle;
   float return_value=0;
   if (choice==0){ 
     pthread_mutex_lock(&mutex_compass);
@@ -147,9 +165,11 @@ float get_robot_angle(int choice){
   if (choice==1) {
     pthread_mutex_lock(&mutex_compass);
     pthread_mutex_lock(&mutex_gyro);
+    pthread_mutex_lock(&mutex_angle_side);
     int diff=angle_diff(rel_angle_compass,angle_gyro);
-    if (rel_angle_compass<angle_gyro) return_value=rel_angle_compass+0.9*diff;
-    else return_value=angle_gyro+0.1*diff;
+    if (rel_angle_compass<angle_gyro) return_value=rel_angle_compass+0.9*diff+side_angle;
+    else return_value=angle_gyro+0.1*diff+side_angle;
+    pthread_mutex_unlock(&mutex_angle_side);
     pthread_mutex_unlock(&mutex_compass);
     pthread_mutex_unlock(&mutex_gyro);
   }
@@ -193,6 +213,33 @@ int get_y_position(){
   return return_value;
 }
 
+void set_x_position(int x){
+  extern pthread_mutex_t mutex_position;
+  pthread_mutex_lock(&mutex_position);
+  pos_x=x;
+  pthread_mutex_unlock(&mutex_position);
+}
+
+void set_y_position(int y){
+  extern pthread_mutex_t mutex_position;
+  pthread_mutex_lock(&mutex_position);
+  pos_y=y;
+  pthread_mutex_unlock(&mutex_position);
+}
+
+void set_position(int x, int y){
+  set_x_position(x);
+  set_y_position(y);
+}
+
+void set_side_angle(int side){
+  extern float side_angle;
+  extern pthread_mutex_t mutex_angle_side;
+  pthread_mutex_lock(&mutex_angle_side);
+  side_angle=side;
+  pthread_mutex_unlock(&mutex_angle_side);
+}
+
 void print_robot_abs_angle(){
   printf("[I] The absolute angle of the robot is : %f \n", get_robot_abs_angle());
 }
@@ -212,8 +259,9 @@ void print_robot_coordinates(){
     angle: %f \n", get_x_position(), get_y_position(), get_robot_rel_angle());
 }
 
-void create_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro){
+void create_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro, int * s){
   create_thread_position(sn);
   create_thread_compass(sn_compass);
   create_thread_gyro(sn_gyro);
+  create_thread_send_message(s);
 }

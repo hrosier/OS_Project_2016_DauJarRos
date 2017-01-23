@@ -150,10 +150,10 @@ void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos
     distance=(int)sqrt(pow((dest_pos_x-prev_pos_x),2)+pow(dest_pos_y-prev_pos_y,2));
     // Not optimal but I forget a little how arctan works and I don't want to search ...
     dest_angle=(int)RAD_TO_DEG*atan((float)abs(dest_pos_x-prev_pos_x)/(float)abs(dest_pos_y-prev_pos_y));
-    //printf("[D] Avant corection prev_x : %d, prev_y : %d, dest_x : %d dest_y : %d, distance : %d, angle : %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
-    if (dest_pos_x<prev_pos_x && dest_pos_y<prev_pos_y) dest_angle+=180;
-    if (dest_pos_x>prev_pos_x && dest_pos_y<prev_pos_y) dest_angle+=90;
-    if (dest_pos_x<prev_pos_x && dest_pos_y>prev_pos_y) dest_angle+=270;
+    printf("[D] Avant corection prev_x : %d, prev_y : %d, dest_x : %d dest_y : %d, distance : %d, angle : %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
+    if (dest_pos_x<prev_pos_x && dest_pos_y<prev_pos_y) dest_angle=180+dest_angle;
+    if (dest_pos_x>prev_pos_x && dest_pos_y<prev_pos_y) dest_angle=180-dest_angle;
+    if (dest_pos_x<prev_pos_x && dest_pos_y>prev_pos_y) dest_angle=360-dest_angle;
 
     printf("[I,goto2] I am at (%d,%d) and I go to (%d,%d) by running %dmm with an angle of %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
     //TODO: know if we use turn1 or turn2

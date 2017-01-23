@@ -11,6 +11,8 @@
 #include "movement.h"
 #include "turn.h"
 #include "position.h"
+#include "bluetooth.h"
+#include "final.h"
 // WIN32 /////////////////////////////////////////
 #ifdef __WIN32__
 #include <windows.h>
@@ -20,4 +22,5 @@
 #define Sleep( msec ) usleep(( msec ) * 1000 )
 //////////////////////////////////////////////////
 #endif
+
 

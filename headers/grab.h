@@ -17,7 +17,7 @@ int scan_angle_distance2(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, in
 int is_it_the_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int speed, int distance);
 void run_back_no_ball(uint8_t *sn, uint8_t sn_sonar, uint8_t sn3, int speed);
 void door_up_down( uint8_t sn3, int speed );
-void release_ball(uint8_t *sn, uint8_t sn_sonar, uint8_t sn3, int speed, int distance, int front_or_back);
+void release_ball(uint8_t *sn, uint8_t sn_sonar, uint8_t sn3, int speed, int distance, int front_or_back, int s, int dest);
 int scan (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color,int speed_scan, int speed_catch, int limit_distance);
 int scan2 (uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color,int speed_scan, int speed_catch, int limit_distance);
 int catch_if_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color, int speed_catch, int distance_to_object, int limit_distance);

@@ -63,7 +63,9 @@ void mono_check_for_obstacle(uint8_t sn_sonar, uint8_t sn){
 void bi_turn_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int ramp_up, int ramp_down, char search_obstacle){
   // linear regression to find the max_speed
   int angle = (int)( 360*position/RIGHT_ANGLE);
-  int max_speed = abs((int)(-0.4*angle*angle+22*angle+30));
+  int max_speed ;
+  if (abs(angle)<=25) max_speed = abs((int)(-0.4*angle*angle+22*abs(angle)+20));
+  if (abs(angle)>25 && abs(angle)<120) max_speed = (int)(5*abs(angle)+220);
   if (max_speed>MAX_SPEED) max_speed=MAX_SPEED;
   speed=abs(speed);
   if (speed > max_speed) speed=max_speed;
@@ -198,21 +200,21 @@ void turn_to_angle(uint8_t *sn, uint8_t sn_sonar, int initial_speed, int angle, 
   while (diff>3){
     if (robot_angle_tmp>angle){
       if (diff<abs(angle+360-robot_angle_tmp)){
-        printf("[D,turn] 1: i am gonna turn for : %d \n", -diff);
+        //printf("[D,turn] 1: i am gonna turn for : %d \n", -diff);
         bi_turn_angle(sn,sn_sonar,speed,-diff,search_obstacle);
       }
       else {
-        printf("[D,turn] 2: i am gonna turn for : %d \n", (int)(360-robot_angle_tmp+angle));
+        //printf("[D,turn] 2: i am gonna turn for : %d \n", (int)(360-robot_angle_tmp+angle));
         bi_turn_angle(sn,sn_sonar,speed,(int)(360-robot_angle_tmp+angle),search_obstacle);
       }
     }
     else {
       if (diff<abs(robot_angle_tmp+360-angle)){
-        printf("[D,turn] 3: i am gonna turn for : %d \n", diff);
+        //printf("[D,turn] 3: i am gonna turn for : %d \n", diff);
         bi_turn_angle(sn,sn_sonar,speed,diff,search_obstacle);
       }
       else {
-        printf("[D,turn] 4: i am gonna turn for : %d \n", (int)(-360-robot_angle_tmp+angle));
+        //printf("[D,turn] 4: i am gonna turn for : %d \n", (int)(-360-robot_angle_tmp+angle));
         bi_turn_angle(sn,sn_sonar,speed,(int)(-robot_angle_tmp-(360-angle)),search_obstacle);
       }
     }
@@ -220,7 +222,7 @@ void turn_to_angle(uint8_t *sn, uint8_t sn_sonar, int initial_speed, int angle, 
     //print_robot_abs_angle();
     if (rel){
       robot_angle_tmp=get_robot_rel_angle();
-      printf("[D,turn] Inside while : rel_angle : %f , dest angle :%d \n",robot_angle_tmp,angle);
+      //printf("[D,turn] Inside while : rel_angle : %f , dest angle :%d \n",robot_angle_tmp,angle);
     }
     else {
       robot_angle_tmp=get_robot_abs_angle();

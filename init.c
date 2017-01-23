@@ -25,7 +25,7 @@ void uninit (uint8_t *sn3, uint8_t *sn4){
   ev3_uninit();
 }
 
-void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn_gyro, uint8_t *sn){
+void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn_gyro, uint8_t *sn, int *s){
   init();
   init_wheels(sn1,sn2,sn);
   init_door(sn3);
@@ -34,7 +34,7 @@ void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *s
   init_sonar(sn_sonar);
   init_gyro(sn_gyro);
   init_compass(sn_compass);
-  init_threads(sn,sn_compass,sn_gyro);
+  init_threads(sn,sn_compass,sn_gyro,s);
 }
 
 void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn){
@@ -84,6 +84,7 @@ void init_door(uint8_t *sn3){
 
 void init_sonar(uint8_t *sn_sonar ){
   if (ev3_search_sensor(LEGO_EV3_US, sn_sonar,0)){
+    set_sensor_mode(*sn_sonar,"US-DIST-CM");
   }
   else {
     printf("[X] Sonar is NOT found\n" );
@@ -120,7 +121,7 @@ void init_compass(uint8_t *sn_compass){
   }
 }
 
-void init_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro){
-  create_threads(sn,sn_compass,sn_gyro);
+void init_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro, int *s){
+  create_threads(sn,sn_compass,sn_gyro,s);
 }
  

@@ -35,6 +35,7 @@ h : $(SRCS)
 
 obj/movement.o : movement.c movement.h turn.c turn.h common_variables.h
 obj/turn.o : turn.c turn.h common_variables.h
+obj/bluetooth.o : common_variables.h bluetooth.h bluetooth.c
 
 mainTest : $(OBJECTS) mainTest.o
 	$(CC) $^ $(INCLUDE) $(CFLAGS) -lm -lev3dev-c -lpthread -o $@

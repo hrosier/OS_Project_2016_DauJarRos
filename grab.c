@@ -110,10 +110,10 @@ int scan_angle_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int angle, int
   else {
     printf("[I,scan1] There is an obstacle in the range %d \n",distance);
     if(distance<300){
-      bi_turn_angle(sn,sn_sonar,speed/6, 20-0.06*distance,1);
+      bi_turn_angle(sn,sn_sonar,speed/6, 20-0.06*distance,0);
     }
     if (distance>400){
-      bi_turn_angle(sn,sn_sonar,speed/6, 10,1);
+      bi_turn_angle(sn,sn_sonar,speed/6, 10,0);
     }
   }
   return value;
@@ -166,9 +166,9 @@ int is_it_the_ball(uint8_t *sn, uint8_t sn3, uint8_t sn_sonar, uint8_t sn_color,
     bi_turn_angle(sn,sn_sonar,speed/2,-50,0);
     if (scan_angle_distance(sn,sn_sonar,speed/3,80,distance+10)>distance){
       bi_turn_angle(sn,sn_sonar,speed/2,-30,0);
-      run_distance(sn,sn_sonar,speed*3/4,-150,0);
-      distance+=150;
-      bi_turn_angle(sn,sn_sonar,speed/2,-20,0);
+      run_distance(sn,sn_sonar,speed*3/4,-100,0);
+      distance+=100;
+      bi_turn_angle(sn,sn_sonar,speed/2,30,0);
     }
   }
   door_mi_up_standard(sn3);

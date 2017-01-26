@@ -66,7 +66,7 @@ int main( int argc, char *argv[] ){
     error=0;
   }
   if (!strcmp(choice,"bluetooth")){
-    test_bluetooth(sn,sn3,sn_sonar,sn_color,&s,choice_parameters);
+    test_bluetooth(sn,sn3,sn4,sn_sonar,sn_color,&s,choice_parameters);
     error=0;
   }
   if (!strcmp(choice,"gyro")){
@@ -117,7 +117,7 @@ int main( int argc, char *argv[] ){
   }
   if (!strcmp(choice,"bigbeg")){
     create_thread_print_coordinates();
-    big_arena_beginner(sn,sn3,sn_sonar,choice_parameters[0],s,dest);
+    big_arena_beginner(sn,sn3,sn4,sn_sonar,choice_parameters[0],s,dest);
     error=0;
   }
   if (!strcmp(choice,"bigfin")){

@@ -60,9 +60,9 @@ void init_door_or_catapult(uint8_t *sn3,int port){
   if ( ev3_search_tacho_plugged_in(port,0, sn3, 0 )) {
     set_tacho_stop_action_inx( *sn3, TACHO_RESET);
     set_tacho_position(*sn3, 0);
-    //if (port==PORT_CATAPULT){
+    if (port==PORT_CATAPULT){
     set_tacho_stop_action_inx( *sn3, TACHO_HOLD );
-    //}
+    }
   }
   else {
     if (port==PORT_DOOR){
@@ -124,4 +124,4 @@ void init_compass(uint8_t *sn_compass){
 void init_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro, int *s){
   create_threads(sn,sn_compass,sn_gyro,s);
 }
- 
+

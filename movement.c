@@ -116,8 +116,8 @@ void run_to_rel_pos(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int 
 void run_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int search_obstacle){
   int max_speed=MAX_SPEED;
   //the robot can't run too fast if the distance is small
-  if (abs(distance)<100) max_speed=-0.026*distance*distance+6.67*abs(distance)+80;
-  if (abs(distance)>=100 && distance<300) max_speed=-0.0071*distance*distance+4.63*abs(distance)+104;
+  if (abs(distance)<100) max_speed=-0.026*distance*distance+6.67*abs(distance)+10;
+  if (abs(distance)>=100 && distance<300) max_speed=-0.0071*distance*distance+4.63*abs(distance)+54;
   if (max_speed>MAX_SPEED) max_speed=MAX_SPEED;
   if (speed>max_speed) speed=max_speed;
   printf("[I,movement] I am going to run %dmm at %d (max_speed:%d)\n",distance,speed,max_speed);

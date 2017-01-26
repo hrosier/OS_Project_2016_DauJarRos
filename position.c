@@ -111,9 +111,10 @@ void * thread_gyro (void *input){
 }
 
 void * thread_send_message (void *input){
+  extern unsigned char next;
     int *s=(int*)input;
     while (1){
-      send_message(*s,6,0,0);
+      send_message(*s,6,next,0);
       Sleep(2000);
     }
 }
@@ -263,5 +264,5 @@ void create_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro, int * s)
   create_thread_position(sn);
   create_thread_compass(sn_compass);
   create_thread_gyro(sn_gyro);
-  create_thread_send_message(s);
+  //create_thread_send_message(s);
 }

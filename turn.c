@@ -64,8 +64,8 @@ void bi_turn_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int position, in
   // linear regression to find the max_speed
   int angle = (int)( 360*position/RIGHT_ANGLE);
   int max_speed ;
-  if (abs(angle)<=25) max_speed = abs((int)(-0.4*angle*angle+22*abs(angle)+20));
-  if (abs(angle)>25 && abs(angle)<120) max_speed = (int)(5*abs(angle)+220);
+  if (abs(angle)<=25) max_speed = abs((int)(-0.4*angle*angle+22*abs(angle)+5));
+  if (abs(angle)>25 && abs(angle)<120) max_speed = (int)(5*abs(angle)+150);
   if (max_speed>MAX_SPEED) max_speed=MAX_SPEED;
   speed=abs(speed);
   if (speed > max_speed) speed=max_speed;

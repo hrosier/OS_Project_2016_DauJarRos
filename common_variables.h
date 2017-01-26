@@ -21,7 +21,9 @@
 #define SONAR_DISTANCE 500
 
 //Bluetooth//
-#define SERV_ADDR   "60:c5:47:95:49:7d"     /* Whatever the address of the server is */
+//#define SERV_ADDR   "DC:53:60:AD:61:90"     /* Whatever the address of the server is */
+#define SERV_ADDR   "98:01:A7:9F:09:00"     /* Whatever the address of the server is */
+//#define SERV_ADDR   "60:c5:47:95:49:7d"     /* Whatever the address of the server is */
 #define TEAM_ID     6                       /* Your team ID */
 
 #define MSG_ACK     0

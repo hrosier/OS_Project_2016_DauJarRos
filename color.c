@@ -5,6 +5,7 @@ const char const *color[] = { "?", "BLACK", "BLUE", "GREEN", "YELLOW", "RED", "W
 
 void print_RGB(uint8_t sn_color){
   float val0, val1, val2;
+  // we change the mode of the sensor to RGB_RAW to get the trichromic values
   set_sensor_mode(sn_color, "RGB_RAW");
   get_sensor_value0(sn_color,&val0);
   get_sensor_value0(sn_color,&val1);

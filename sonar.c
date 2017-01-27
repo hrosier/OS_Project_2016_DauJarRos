@@ -1,3 +1,5 @@
+/* this file contains the functions used to deal with the sonar sensor */
+
 #include "basic_include.h"
 
 float get_sonar(uint8_t sn_sonar){
@@ -5,7 +7,6 @@ float get_sonar(uint8_t sn_sonar){
   if ( !get_sensor_value0(sn_sonar, &value )) {
     value = 0;
   }
-  //printf( "\r(%f) \n", value);
   fflush( stdout );
   return value;
 }

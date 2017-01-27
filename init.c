@@ -1,10 +1,6 @@
+/* this file contains the functions used to initialize the motors and the sensors */
+
 #include "basic_include.h"
-#include "catapult.h"
-#include "grab.h"
-#include "movement.h"
-#include "turn.h"
-#include "init.h"
-#include "position.h"
 
 #define PORT_WHEEL1 65
 #define PORT_WHEEL2 66
@@ -22,10 +18,11 @@ void init(){
 
 void uninit (uint8_t *sn3, uint8_t *sn4){
   set_tacho_stop_action_inx( *sn3, TACHO_COAST );
+  set_tacho_stop_action_inx( *sn4, TACHO_COAST );
   ev3_uninit();
 }
 
-void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn_gyro, uint8_t *sn, int *s){
+void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *sn_sonar, uint8_t *sn_color, uint8_t *sn_compass, uint8_t *sn_gyro, uint8_t *sn){
   init();
   init_wheels(sn1,sn2,sn);
   init_door(sn3);
@@ -34,7 +31,7 @@ void init_all(uint8_t *sn1, uint8_t *sn2, uint8_t *sn3, uint8_t *sn4, uint8_t *s
   init_sonar(sn_sonar);
   init_gyro(sn_gyro);
   init_compass(sn_compass);
-  init_threads(sn,sn_compass,sn_gyro,s);
+  init_threads(sn,sn_compass,sn_gyro);
 }
 
 void init_wheels(uint8_t *sn1, uint8_t *sn2, uint8_t *sn){
@@ -61,6 +58,7 @@ void init_door_or_catapult(uint8_t *sn3,int port){
     set_tacho_stop_action_inx( *sn3, TACHO_RESET);
     set_tacho_position(*sn3, 0);
     if (port==PORT_CATAPULT){
+      // the TACHO_HOLD mode let us put back the projectiles even when the robot is not running
     set_tacho_stop_action_inx( *sn3, TACHO_HOLD );
     }
   }
@@ -121,7 +119,7 @@ void init_compass(uint8_t *sn_compass){
   }
 }
 
-void init_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro, int *s){
-  create_threads(sn,sn_compass,sn_gyro,s);
+void init_threads(uint8_t *sn, uint8_t *sn_compass, uint8_t *sn_gyro){
+  create_threads(sn,sn_compass,sn_gyro);
 }
 

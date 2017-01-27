@@ -1,8 +1,13 @@
+/* this file contains the functions used to deal with the movement of the robot (except from its rotation -> cf turn.c) */
+
 #include "basic_include.h"
 #include <math.h>
 #include "movement.h"
 
 #define SLEEP_TIME 800
+
+
+///////////////  Functions used at the end ////////////////////
 
 void stop_running(uint8_t *sn){
   multi_set_tacho_command_inx( sn , TACHO_STOP);
@@ -13,7 +18,7 @@ void tacho_settings(uint8_t *sn, int speed, int ramp_up, int ramp_down, INX_T FL
   // Check if the robot can run at this speed
   get_tacho_max_speed(sn[0], &max_speed);
   if (speed > max_speed ){
-    printf("the robot can not run this fast (%d), its max speed is %d  \n", speed, max_speed );
+    printf("[X,movement] The robot can not run this fast (%d), its max speed is %d  \n", speed, max_speed );
     return;
   }
   multi_set_tacho_stop_action_inx( sn, TACHO_COAST );
@@ -22,6 +27,99 @@ void tacho_settings(uint8_t *sn, int speed, int ramp_up, int ramp_down, INX_T FL
   multi_set_tacho_ramp_down_sp( sn, ramp_down);
   multi_set_tacho_command_inx( sn, FLAGS);
 }
+
+// the search_obstacle flag let us decide the robot's behaviour if it encounters an obstacle 
+// the position param correspond to the position_sp value of the motors
+// (0 it doesn't do anything, 1 it stops, 2 the robot continue running and the decision is decided after the call of the function) 
+void run_to_rel_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int ramp_up, int ramp_down, int search_obstacle){
+  multi_set_tacho_position_sp(sn, position);
+  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_REL_POS);
+  if (search_obstacle==0) continue_until_stop_running(sn); 
+  if (search_obstacle==1) check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
+}
+
+void run_to_rel_pos(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int search_obstacle){
+  run_to_rel_pos_ramp(sn,sn_sonar,speed,position,MOVEMENT_RAMP_UP,MOVEMENT_RAMP_DOWN,search_obstacle);
+}
+
+void continue_until_stop_running(uint8_t *sn){
+  FLAGS_T state;
+  do {
+    get_tacho_state_flags( sn[0], &state );
+  } while ( state );
+}
+
+void check_for_obstacle(uint8_t *sn, uint8_t sn_sonar, int distance){
+  float value=0;
+  FLAGS_T state;
+  get_tacho_state_flags(sn[0],&state);
+  do {
+    if ( !get_sensor_value0(sn_sonar, &value )) {
+      value = 0;
+    }
+    //While no obstacle the motor runs 
+    get_sensor_value0(sn_sonar, &value);
+    get_tacho_state_flags(sn[0],&state);
+  } while ((value>distance  || value == 0 ) && state);
+  multi_set_tacho_command_inx( sn, TACHO_STOP );
+  if (value<=distance){
+    printf("There is an obstacle at %f mm \n", value);
+  }
+}
+
+void run_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int search_obstacle){
+  int max_speed=MAX_SPEED;
+  // the max_speed the robot can run depends of the distance it needs to run and the accelearation given.
+  // We have experimentally found this max_speed for different distance 
+  if (abs(distance)<100) max_speed=-0.026*distance*distance+6.67*abs(distance)+10;
+  if (abs(distance)>=100 && distance<300) max_speed=-0.0071*distance*distance+4.63*abs(distance)+54;
+  if (max_speed>MAX_SPEED) max_speed=MAX_SPEED;
+  if (speed>max_speed) speed=max_speed;
+  printf("[I,movement] I am going to run %dmm at %d (max_speed:%d)\n",distance,speed,max_speed);
+  // The DISTANCE_TO_POSITION convert a distance in mm to a number of turn the motor needs to turn 
+  run_to_rel_pos_ramp(sn,sn_sonar, speed, distance*DISTANCE_TO_POSITION, MOVEMENT_RAMP_UP, MOVEMENT_RAMP_DOWN, search_obstacle);
+}
+
+void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance){
+  run_to_rel_pos_ramp(sn,sn_sonar, speed, distance*DISTANCE_TO_POSITION, MOVEMENT_RAMP_UP, MOVEMENT_RAMP_DOWN, 1);
+  check_for_obstacle(sn, sn_sonar, MOVEMENT_DISTANCE_SONAR);
+}
+
+/** the robot goes diagonaly to the destination, the parameter numbber_try let us choose the precision. If it is set to 2 this function will be called 2 times recursivly.
+ */
+void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, int number_try, char check_for_obstacle){
+  if (number_try>0){
+    int prev_pos_x, prev_pos_y, distance, dest_angle;
+
+    // We fetch the position of the robot
+    prev_pos_x=get_x_position();
+    prev_pos_y=get_y_position();
+
+    // We compute the distance will have to run and the angle it needs to turn to
+    distance=(int)sqrt(pow((dest_pos_x-prev_pos_x),2)+pow(dest_pos_y-prev_pos_y,2));
+    // Not optimal but I forget a little how arctan works and I don't want to search ...
+    dest_angle=(int)RAD_TO_DEG*atan((float)abs(dest_pos_x-prev_pos_x)/(float)abs(dest_pos_y-prev_pos_y));
+    //printf("[D] Avant corection prev_x : %d, prev_y : %d, dest_x : %d dest_y : %d, distance : %d, angle : %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
+    if (dest_pos_x<prev_pos_x && dest_pos_y<prev_pos_y) dest_angle=180+dest_angle;
+    if (dest_pos_x>prev_pos_x && dest_pos_y<prev_pos_y) dest_angle=180-dest_angle;
+    if (dest_pos_x<prev_pos_x && dest_pos_y>prev_pos_y) dest_angle=360-dest_angle;
+
+    printf("[I,goto2] I am at (%d,%d) and I go to (%d,%d) by running %dmm with an angle of %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
+    turn_to_angle(sn,sn_sonar,turn_speed,dest_angle,1,check_for_obstacle);
+    run_distance(sn,sn_sonar,speed,distance,check_for_obstacle);
+    printf("[I,goto2] I arrive at position (%d,%d) \n",get_x_position(),get_y_position());
+    // The function is called recursively to make te position more presise
+    if (number_try >1 && (abs(get_x_position()-dest_pos_x)>POSITION_PRECISION || abs(get_y_position()-dest_pos_y)>POSITION_PRECISION) )
+      go_to_position1(sn,sn_sonar,dest_pos_x,dest_pos_y,speed/2,turn_speed*3/4,number_try-1,check_for_obstacle);
+  }
+}
+
+
+
+
+//////////////////////// Functions NOT used at the end ///////////////////////////
+
+
 
 void run_forever_ramp(uint8_t *sn, int speed, int ramp_up, int ramp_down){
   tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_FOREVER);
@@ -38,46 +136,6 @@ void run_timed_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int r
   else {
     check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
   }
-}
-
-void run_to_abs_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down, int search_obstacle){
-  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_ABS_POS);
-  if(search_obstacle==0){
-    continue_until_stop_running(sn);
-  }
-  else {
-    check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
-  }
-}
-
-void run_to_rel_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int ramp_up, int ramp_down, int search_obstacle){
-  multi_set_tacho_position_sp(sn, position);
-  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_REL_POS);
-  if(search_obstacle==0){
-    continue_until_stop_running(sn);
-  } 
-  else {
-    check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
-  }
-}
-
-void check_for_obstacle(uint8_t *sn, uint8_t sn_sonar, int distance){
-  float value=0;
-  FLAGS_T state;
-  get_tacho_state_flags(sn[0],&state);
-  do {
-    if ( !get_sensor_value0(sn_sonar, &value )) {
-      value = 0;
-    }
-    //While no obstacle run tacho 
-    get_sensor_value0(sn_sonar, &value);
-    get_tacho_state_flags(sn[0],&state);
-  } while ((value>distance  || value == 0 ) && state);
-  multi_set_tacho_command_inx( sn, TACHO_STOP );
-  if (value<=distance){
-    printf("There is an obstacle at %f mm \n", value);
-  }
-  Sleep(SLEEP_TIME);
 }
 
 void run_forever_unless_obstacle_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down){
@@ -109,64 +167,54 @@ void run_to_abs_pos(uint8_t *sn, uint8_t sn_sonar, int speed, int search_obstacl
   run_to_abs_pos_ramp(sn, sn_sonar, speed, MOVEMENT_RAMP_UP, MOVEMENT_RAMP_DOWN, search_obstacle);
 }
 
-void run_to_rel_pos(uint8_t *sn, uint8_t sn_sonar, int speed, int position, int search_obstacle){
-  run_to_rel_pos_ramp(sn,sn_sonar,speed,position,MOVEMENT_RAMP_UP,MOVEMENT_RAMP_DOWN,search_obstacle);
-}
-
-void run_distance(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int search_obstacle){
-  int max_speed=MAX_SPEED;
-  //the robot can't run too fast if the distance is small
-  if (abs(distance)<100) max_speed=-0.026*distance*distance+6.67*abs(distance)+10;
-  if (abs(distance)>=100 && distance<300) max_speed=-0.0071*distance*distance+4.63*abs(distance)+54;
-  if (max_speed>MAX_SPEED) max_speed=MAX_SPEED;
-  if (speed>max_speed) speed=max_speed;
-  printf("[I,movement] I am going to run %dmm at %d (max_speed:%d)\n",distance,speed,max_speed);
-  run_to_rel_pos_ramp(sn,sn_sonar, speed, distance*DISTANCE_TO_POSITION, MOVEMENT_RAMP_UP, MOVEMENT_RAMP_DOWN, search_obstacle);
+void run_to_abs_pos_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int ramp_up, int ramp_down, int search_obstacle){
+  tacho_settings(sn, speed, ramp_up, ramp_down, TACHO_RUN_TO_ABS_POS);
+  if(search_obstacle==0){
+    continue_until_stop_running(sn);
+  }
+  else {
+    check_for_obstacle(sn,sn_sonar,MOVEMENT_DISTANCE_SONAR);
+  }
 }
 
 void run_distance_ramp(uint8_t *sn, uint8_t sn_sonar, int speed, int distance, int ramp_up, int ramp_down, int search_obstacle){
   run_to_rel_pos_ramp(sn,sn_sonar, speed, distance*DISTANCE_TO_POSITION, ramp_up, ramp_down, search_obstacle);
 }
 
-void run_distance_unless_obstacle(uint8_t *sn, uint8_t sn_sonar, int speed, int distance){
-  run_to_rel_pos_ramp(sn,sn_sonar, speed, distance*DISTANCE_TO_POSITION, MOVEMENT_RAMP_UP, MOVEMENT_RAMP_DOWN, 1);
-  check_for_obstacle(sn, sn_sonar, MOVEMENT_DISTANCE_SONAR);
-}
-
-void continue_until_stop_running(uint8_t *sn){
-  FLAGS_T state;
-  do {
-    get_tacho_state_flags( sn[0], &state );
-  } while ( state );
-}
-
-/** the robot go diagonaly to the destination 
- */
-void go_to_position1(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, int number_try, char check_for_obstacle){
-  if (number_try>0){
-    int prev_pos_x, prev_pos_y, distance, dest_angle;
-    prev_pos_x=get_x_position();
-    prev_pos_y=get_y_position();
-    distance=(int)sqrt(pow((dest_pos_x-prev_pos_x),2)+pow(dest_pos_y-prev_pos_y,2));
-    // Not optimal but I forget a little how arctan works and I don't want to search ...
-    dest_angle=(int)RAD_TO_DEG*atan((float)abs(dest_pos_x-prev_pos_x)/(float)abs(dest_pos_y-prev_pos_y));
-    printf("[D] Avant corection prev_x : %d, prev_y : %d, dest_x : %d dest_y : %d, distance : %d, angle : %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
-    if (dest_pos_x<prev_pos_x && dest_pos_y<prev_pos_y) dest_angle=180+dest_angle;
-    if (dest_pos_x>prev_pos_x && dest_pos_y<prev_pos_y) dest_angle=180-dest_angle;
-    if (dest_pos_x<prev_pos_x && dest_pos_y>prev_pos_y) dest_angle=360-dest_angle;
-
-    printf("[I,goto2] I am at (%d,%d) and I go to (%d,%d) by running %dmm with an angle of %d \n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y,distance,dest_angle);
-    //TODO: know if we use turn1 or turn2
-    turn_to_angle(sn,sn_sonar,turn_speed,dest_angle,1,check_for_obstacle);
-    //bi_turn_angle2(sn,sn_sonar,turn_speed,dest_angle,check_for_obstacle);
-    run_distance(sn,sn_sonar,speed,distance,check_for_obstacle);
-    //correct_position(sn,sn_sonar,speed,dest_pos_x,dest_pos_y,check_for_obstacle);
-    printf("[I,goto2] I arrive at position (%d,%d) \n",get_x_position(),get_y_position());
-    if (number_try >1 && (abs(get_x_position()-dest_pos_x)>POSITION_PRECISION || abs(get_y_position()-dest_pos_y)>POSITION_PRECISION) )
-      go_to_position1(sn,sn_sonar,dest_pos_x,dest_pos_y,speed/2,turn_speed*3/4,number_try-1,check_for_obstacle);
+/* the robot go only horizontaly to the destination  */
+void go_to_position2(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, char check_for_obstacle){
+  int prev_pos_x, prev_pos_y;
+  prev_pos_x=get_x_position();
+  prev_pos_y=get_y_position();
+  printf("[D] I am at (%d,%d) and I am going to (%d, %d)\n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y);
+  // The robot will first run horizontaly
+  if (dest_pos_x!=prev_pos_x){
+    if (dest_pos_x>prev_pos_x){
+      turn_to_angle(sn,sn_sonar,turn_speed,90,1,check_for_obstacle);
+      run_distance(sn,sn_sonar,speed,(dest_pos_x-prev_pos_x),check_for_obstacle);
+    }
+    else {
+      turn_to_angle(sn,sn_sonar,turn_speed,270,1,check_for_obstacle);
+      run_distance(sn,sn_sonar,speed,-(dest_pos_x-prev_pos_x),check_for_obstacle);
+    }
   }
+  // The robot will then run vertically
+  if (dest_pos_y!=prev_pos_y){
+    if (dest_pos_y>prev_pos_y){
+      turn_to_angle(sn,sn_sonar,turn_speed,0,1,check_for_obstacle);
+      run_distance(sn,sn_sonar,speed,(dest_pos_y-prev_pos_y),check_for_obstacle);
+    }
+    else {
+      turn_to_angle(sn,sn_sonar,turn_speed,180,1,check_for_obstacle);
+      run_distance(sn,sn_sonar,speed,-(dest_pos_y-prev_pos_y),check_for_obstacle);
+    }
+  }
+  correct_position(sn,sn_sonar,speed,dest_pos_x,dest_pos_y,check_for_obstacle);
+  printf("[D] I arrive at position (%d,%d) \n",get_x_position(),get_y_position());
 }
 
+/* this function was used before to have a better accuracy on the precision for the functions go_to_position,
+ but calling the functions severals time appears to be better */
 void correct_position(uint8_t *sn, uint8_t sn_sonar, int speed,int dest_pos_x,int dest_pos_y, char check_for_obstacle){
   //Correction to improve accuracy
   int diff_x = get_x_position()- dest_pos_x;
@@ -221,36 +269,4 @@ void correct_position(uint8_t *sn, uint8_t sn_sonar, int speed,int dest_pos_x,in
     }
   }
   printf("[D] diff_y : %d, diff now : %d\n", diff_y, get_y_position()-dest_pos_y);
-}
-
-/** the robot go only horizontaly to the destination 
- *
- */
-void go_to_position2(uint8_t *sn, uint8_t sn_sonar, int dest_pos_x, int dest_pos_y, int speed, int turn_speed, char check_for_obstacle){
-  int prev_pos_x, prev_pos_y;
-  prev_pos_x=get_x_position();
-  prev_pos_y=get_y_position();
-  printf("[D] I am at (%d,%d) and I am going to (%d, %d)\n",prev_pos_x,prev_pos_y,dest_pos_x,dest_pos_y);
-  if (dest_pos_x!=prev_pos_x){
-    if (dest_pos_x>prev_pos_x){
-      turn_to_angle(sn,sn_sonar,turn_speed,90,1,check_for_obstacle);
-      run_distance(sn,sn_sonar,speed,(dest_pos_x-prev_pos_x),check_for_obstacle);
-    }
-    else {
-      turn_to_angle(sn,sn_sonar,turn_speed,270,1,check_for_obstacle);
-      run_distance(sn,sn_sonar,speed,-(dest_pos_x-prev_pos_x),check_for_obstacle);
-    }
-  }
-  if (dest_pos_y!=prev_pos_y){
-    if (dest_pos_y>prev_pos_y){
-      turn_to_angle(sn,sn_sonar,turn_speed,0,1,check_for_obstacle);
-      run_distance(sn,sn_sonar,speed,(dest_pos_y-prev_pos_y),check_for_obstacle);
-    }
-    else {
-      turn_to_angle(sn,sn_sonar,turn_speed,180,1,check_for_obstacle);
-      run_distance(sn,sn_sonar,speed,-(dest_pos_y-prev_pos_y),check_for_obstacle);
-    }
-  }
-  correct_position(sn,sn_sonar,speed,dest_pos_x,dest_pos_y,check_for_obstacle);
-  printf("[D] I arrive at position (%d,%d) \n",get_x_position(),get_y_position());
 }

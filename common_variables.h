@@ -1,3 +1,6 @@
+/* this file contains the variables used by several functions */
+
+
 //turn//
 #define TURN_SPEED 430 //half of the max speed
 #define RIGHT_ANGLE 1030
